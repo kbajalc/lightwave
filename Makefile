@@ -71,7 +71,7 @@ LW_WFDB = "/usr/local/database http://physionet.org/physiobank/database"
 # DocumentRoot is the web server's top-level directory of (HTML) content.
 # The values below and in your Apache configuration file should match.
 # Note that it does not end with '/'.
-DocumentRoot = /home/physionet/html
+DocumentRoot = ./physionet
 
 # ServerName is the hostname of the web server, as specified in your Apache
 # configuration file.  The default setting below attempts to guess your server's
@@ -79,7 +79,7 @@ DocumentRoot = /home/physionet/html
 # multiple hostnames, however.  If the output of 'hostname' does not match the
 # value of ServerName in your Apache configuration file, change the value below
 # to match the Apache configuration file.
-ServerName = `hostname`
+ServerName = `lightwave`
 
 # ScriptAlias1 is the prefix of URLs for server scripts (CGI applications).
 # It should match the first argument of the ScriptAlias directive in your
@@ -89,14 +89,14 @@ ScriptAlias1 = /cgi-bin/
 # ScriptAlias2 is the directory in which server scripts are to be installed.
 # It should match the second argument of the ScriptAlias directive in your
 # Apache configuration file.
-CGIDIR = /home/physionet/cgi-bin/
+CGIDIR = ./physionet/cgi-bin/
 
 # User is the user who "owns" processes started by the web server.
 # It should match the value of User in your Apache configuration file.
 User = apache
 
 # LWCLIENTDIR is the directory for the installed LightWAVE client.
-LWCLIENTDIR = $(DocumentRoot)/lightwave
+LWCLIENTDIR = $(DocumentRoot)/lw
 # The client should be installed in a subdirectory of DocumentRoot, and the
 # server and scribe should go into CGIDIR.
 
@@ -109,7 +109,7 @@ LWSCRIBEURL = http://$(ServerName)$(ScriptAlias1)lw-scribe
 # LWTMP is a temporary directory for server-side backup of edit logs uploaded
 # from LightWAVE clients to the scribe, and annotation files created from the
 # edit logs by patchann.
-LWTMP = /ptmp/lw
+LWTMP = ./ptmp/lw
 
 # Directory for installation of the WFDB software package;  patchann is
 # installed there, where the scribe expects to find it.
@@ -124,6 +124,14 @@ CFLAGS = -O -DLWDIR=\"$(LWCLIENTDIR)\" -DLWVER=\"$(LWVERSION)\" \
 
 # LDFLAGS is a set of options for the linker.
 LDFLAGS = -lwfdb
+
+run: server scribe client
+	@echo
+	@echo LightWAVE has been installed.
+	python lw-server
+
+exe:
+	python lw-server
 
 # Install both the lightwave server and client on this machine.
 install:	server scribe client
@@ -140,17 +148,18 @@ test:
 client:	  clean FORCE
 	mkdir -p $(LWCLIENTDIR)
 	cp -pr client/* $(LWCLIENTDIR)
-	rm -f $(LWCLIENTDIR)/lightwave.html
-	baseurl=`echo "$(LWSERVERURL)" | cut -d/ -f1-3`; \
-	serverpath=`echo "$(LWSERVERURL)" | cut -d/ -f4-`; \
-	scribepath=`echo "$(LWSCRIBEURL)" | cut -d/ -f4-`; \
-	sed "s+'https://physionet.org'+'$$baseurl'+" \
-	 <client/js/lightwave.js | \
-	sed "s+'/cgi-bin/lightwave'+'/$$serverpath'+" | \
-	sed "s+'/cgi-bin/lw-scribe'+'/$$scribepath'+" \
-	  >$(LWCLIENTDIR)/js/lightwave.js
-	sed "s/\[local\]/$(LWVERSION)/" <client/lightwave.html \
-	  >$(LWCLIENTDIR)/index.html
+	cp -pr client/lightwave.html $(LWCLIENTDIR)/index.html
+	# rm -f $(LWCLIENTDIR)/lightwave.html
+	# baseurl=`echo "$(LWSERVERURL)" | cut -d/ -f1-3`; \
+	# serverpath=`echo "$(LWSERVERURL)" | cut -d/ -f4-`; \
+	# scribepath=`echo "$(LWSCRIBEURL)" | cut -d/ -f4-`; \
+	# sed "s+'https://physionet.org'+'$$baseurl'+" \
+	#  <client/js/lightwave.js | \
+	# sed "s+'/cgi-bin/lightwave'+'/$$serverpath'+" | \
+	# sed "s+'/cgi-bin/lw-scribe'+'/$$scribepath'+" \
+	#   >$(LWCLIENTDIR)/js/lightwave.js
+	# sed "s/\[local\]/$(LWVERSION)/" <client/lightwave.html \
+	#   >$(LWCLIENTDIR)/index.html
 
 # Install the LightWAVE server.
 server:	lightwave
@@ -172,10 +181,10 @@ scribe:	  patchann scribedir
 # Set up a temporary directory on the server for backups of edit logs, and
 # make it writeable by the web server and the processes that it spawns.
 scribedir:
-	[ -d $(LWTMP) ] || sudo mkdir -p $(LWTMP)
-	sudo chmod 755 $(LWTMP)
-	sudo cp -p server/download.html $(LWTMP)
-	sudo chown $(User) $(LWTMP)
+	[ -d $(LWTMP) ] || mkdir -p $(LWTMP)
+	chmod 755 $(LWTMP)
+	cp -p server/download.html $(LWTMP)
+	# chown $(User) $(LWTMP)
 
 # Compile the lightwave server.
 lightwave:	server/lightwave.c server/cgi.c server/*.h
