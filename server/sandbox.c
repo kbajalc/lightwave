@@ -1,5 +1,5 @@
 /* file: sandbox.c	B. Moody	22 February 2019
-			Last revised:	  26 July 2023     version 0.72
+            Last revised:	  26 July 2023     version 0.72
 
 Simple sandbox for the LightWAVE server
 Copyright (C) 2019 Benjamin Moody
@@ -34,16 +34,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <seccomp.h>
 
 #ifndef SYS_SECCOMP
-# define SYS_SECCOMP 1
+#define SYS_SECCOMP 1
 #endif
 
-#define FAIL(msg) do {                                          \
-        fprintf(stderr, "sandboxed-lightwave: %s\n", msg);      \
-        abort();                                                \
+#define FAIL(msg)                                          \
+    do                                                     \
+    {                                                      \
+        fprintf(stderr, "sandboxed-lightwave: %s\n", msg); \
+        abort();                                           \
     } while (0)
-#define FAILERR(msg) do {                                          \
-        perror("sandboxed-lightwave: " msg);                         \
-        abort();                                                     \
+#define FAILERR(msg)                         \
+    do                                       \
+    {                                        \
+        perror("sandboxed-lightwave: " msg); \
+        abort();                             \
     } while (0)
 
 static void set_hard_rlimit(int resource, rlim_t value)
@@ -68,8 +72,10 @@ static void pr_str(const char *str)
 static void pr_hex(unsigned long value)
 {
     char c;
-    if (value >= 16) pr_hex(value / 16);
-    else pr_str("0x");
+    if (value >= 16)
+        pr_hex(value / 16);
+    else
+        pr_str("0x");
     c = (value % 16 < 10 ? '0' + value % 16 : 'a' + value % 16 - 10);
     write(STDERR_FILENO, &c, 1);
 }
@@ -77,23 +83,38 @@ static void pr_hex(unsigned long value)
 static void handle_sigsys(int signum, siginfo_t *info, void *context0)
 {
     ucontext_t *context = context0;
-    if (info->si_code == SYS_SECCOMP) {
-        pr_str("*** blocked system call "); pr_hex(info->si_syscall);
-        pr_str(" arch="); pr_hex(info->si_arch);
+    if (info->si_code == SYS_SECCOMP)
+    {
+        pr_str("*** blocked system call ");
+        pr_hex(info->si_syscall);
+        pr_str(" arch=");
+        pr_hex(info->si_arch);
 #ifdef __x86_64__
-        pr_str(" rdi="); pr_hex(context->uc_mcontext.gregs[REG_RDI]);
-        pr_str(" rsi="); pr_hex(context->uc_mcontext.gregs[REG_RSI]);
-        pr_str(" rdx="); pr_hex(context->uc_mcontext.gregs[REG_RDX]);
-        pr_str(" r10="); pr_hex(context->uc_mcontext.gregs[REG_R10]);
-        pr_str(" r8="); pr_hex(context->uc_mcontext.gregs[REG_R8]);
-        pr_str(" r9="); pr_hex(context->uc_mcontext.gregs[REG_R9]);
+        pr_str(" rdi=");
+        pr_hex(context->uc_mcontext.gregs[REG_RDI]);
+        pr_str(" rsi=");
+        pr_hex(context->uc_mcontext.gregs[REG_RSI]);
+        pr_str(" rdx=");
+        pr_hex(context->uc_mcontext.gregs[REG_RDX]);
+        pr_str(" r10=");
+        pr_hex(context->uc_mcontext.gregs[REG_R10]);
+        pr_str(" r8=");
+        pr_hex(context->uc_mcontext.gregs[REG_R8]);
+        pr_str(" r9=");
+        pr_hex(context->uc_mcontext.gregs[REG_R9]);
 #elif defined(__i386__)
-        pr_str(" ebx="); pr_hex(context->uc_mcontext.gregs[REG_EBX]);
-        pr_str(" ecx="); pr_hex(context->uc_mcontext.gregs[REG_ECX]);
-        pr_str(" edx="); pr_hex(context->uc_mcontext.gregs[REG_EDX]);
-        pr_str(" esi="); pr_hex(context->uc_mcontext.gregs[REG_ESI]);
-        pr_str(" edi="); pr_hex(context->uc_mcontext.gregs[REG_EDI]);
-        pr_str(" ebp="); pr_hex(context->uc_mcontext.gregs[REG_EBP]);
+        pr_str(" ebx=");
+        pr_hex(context->uc_mcontext.gregs[REG_EBX]);
+        pr_str(" ecx=");
+        pr_hex(context->uc_mcontext.gregs[REG_ECX]);
+        pr_str(" edx=");
+        pr_hex(context->uc_mcontext.gregs[REG_EDX]);
+        pr_str(" esi=");
+        pr_hex(context->uc_mcontext.gregs[REG_ESI]);
+        pr_str(" edi=");
+        pr_hex(context->uc_mcontext.gregs[REG_EDI]);
+        pr_str(" ebp=");
+        pr_hex(context->uc_mcontext.gregs[REG_EBP]);
 #endif
         pr_str(" [");
         pr_str(seccomp_syscall_resolve_num_arch(info->si_arch,
@@ -116,7 +137,8 @@ void lightwave_sandbox()
     /* chdir and chroot into $LIGHTWAVE_ROOT, so only files in that
        directory can be read */
     rootdir = getenv("LIGHTWAVE_ROOT");
-    if (!rootdir) {
+    if (!rootdir)
+    {
 #ifdef LW_ROOT
         rootdir = LW_ROOT;
 #else
@@ -132,7 +154,8 @@ void lightwave_sandbox()
     /* If $LIGHTWAVE_WFDBCAL is set, use it as the path to a
        calibration file stored outside the root directory. */
     dbcalfile = getenv("LIGHTWAVE_WFDBCAL");
-    if (dbcalfile) {
+    if (dbcalfile)
+    {
         if (!freopen(dbcalfile, "r", stdin))
             FAILERR("cannot read $LIGHTWAVE_WFDBCAL");
         setenv("WFDBCAL", "-", 1);
@@ -141,7 +164,8 @@ void lightwave_sandbox()
     if (chdir(rootdir) != 0)
         FAILERR("cannot chdir to $LIGHTWAVE_ROOT");
 
-    if (effectiveuid == 0) {
+    if (effectiveuid == 0)
+    {
         if (seteuid(0) != 0)
             FAILERR("cannot set effective user ID");
         if (chroot(".") != 0)
@@ -149,7 +173,8 @@ void lightwave_sandbox()
         if (setreuid(realuid, realuid) != 0)
             FAILERR("cannot set real/effective user ID");
     }
-    else {
+    else
+    {
         if (unshare(CLONE_NEWUSER) != 0)
             FAILERR("cannot create user namespace");
         if (chroot(".") != 0)
@@ -199,13 +224,11 @@ void lightwave_sandbox()
        (openat without AT_FDCWD would allow a local attacker to escape
        from an outer chroot environment; the same goes for fchdir or
        any of the other *at() functions.) */
-    seccomp_rule_add_exact
-        (ctx, SCMP_ACT_ALLOW, SCMP_SYS(open), 1,
-         SCMP_A1(SCMP_CMP_EQ, O_RDONLY));
-    seccomp_rule_add_exact
-        (ctx, SCMP_ACT_ALLOW, SCMP_SYS(openat), 2,
-         SCMP_A0(SCMP_CMP_EQ, (uint32_t) AT_FDCWD),
-         SCMP_A2(SCMP_CMP_EQ, O_RDONLY));
+    seccomp_rule_add_exact(ctx, SCMP_ACT_ALLOW, SCMP_SYS(open), 1,
+                           SCMP_A1(SCMP_CMP_EQ, O_RDONLY));
+    seccomp_rule_add_exact(ctx, SCMP_ACT_ALLOW, SCMP_SYS(openat), 2,
+                           SCMP_A0(SCMP_CMP_EQ, (uint32_t)AT_FDCWD),
+                           SCMP_A2(SCMP_CMP_EQ, O_RDONLY));
 
     /* deny newfstatat(fd, ..., ..., AT_EMPTY_PATH)
        (could allow a local attacker to examine files outside an outer
@@ -213,18 +236,16 @@ void lightwave_sandbox()
        empty from non-empty paths.  If a working fstat() function is
        actually needed, it must be implemented using the fstat system
        call rather than newfstatat.) */
-    seccomp_rule_add_exact
-        (ctx, SCMP_ACT_ERRNO(ENOSYS), SCMP_SYS(newfstatat), 2,
-         SCMP_A0(SCMP_CMP_NE, (uint32_t) AT_FDCWD),
-         SCMP_A3(SCMP_CMP_EQ, AT_EMPTY_PATH));
+    seccomp_rule_add_exact(ctx, SCMP_ACT_ERRNO(ENOSYS), SCMP_SYS(newfstatat), 2,
+                           SCMP_A0(SCMP_CMP_NE, (uint32_t)AT_FDCWD),
+                           SCMP_A3(SCMP_CMP_EQ, AT_EMPTY_PATH));
 
     /* permit mmap(..., PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE, ...)
        (typically lightwave doesn't allocate any huge blocks of memory
        that would make this necessary, but it's good future-proofing) */
-    seccomp_rule_add_exact
-        (ctx, SCMP_ACT_ALLOW, SCMP_SYS(mmap), 2,
-         SCMP_A2(SCMP_CMP_MASKED_EQ, ~(PROT_READ | PROT_WRITE), 0),
-         SCMP_A3(SCMP_CMP_EQ, (MAP_ANONYMOUS | MAP_PRIVATE)));
+    seccomp_rule_add_exact(ctx, SCMP_ACT_ALLOW, SCMP_SYS(mmap), 2,
+                           SCMP_A2(SCMP_CMP_MASKED_EQ, ~(PROT_READ | PROT_WRITE), 0),
+                           SCMP_A3(SCMP_CMP_EQ, (MAP_ANONYMOUS | MAP_PRIVATE)));
 
     /* activate the filter */
     if (seccomp_load(ctx) != 0)

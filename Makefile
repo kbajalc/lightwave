@@ -125,6 +125,8 @@ CFLAGS = -O -DLWDIR=\"$(LWCLIENTDIR)\" -DLWVER=\"$(LWVERSION)\" \
 # LDFLAGS is a set of options for the linker.
 LDFLAGS = -lwfdb
 
+all: server scribe client
+
 run: server scribe client
 	@echo
 	@echo LightWAVE has been installed.
@@ -149,17 +151,17 @@ client:	  clean FORCE
 	mkdir -p $(LWCLIENTDIR)
 	cp -pr client/* $(LWCLIENTDIR)
 	cp -pr client/lightwave.html $(LWCLIENTDIR)/index.html
-	# rm -f $(LWCLIENTDIR)/lightwave.html
-	# baseurl=`echo "$(LWSERVERURL)" | cut -d/ -f1-3`; \
-	# serverpath=`echo "$(LWSERVERURL)" | cut -d/ -f4-`; \
-	# scribepath=`echo "$(LWSCRIBEURL)" | cut -d/ -f4-`; \
-	# sed "s+'https://physionet.org'+'$$baseurl'+" \
-	#  <client/js/lightwave.js | \
-	# sed "s+'/cgi-bin/lightwave'+'/$$serverpath'+" | \
-	# sed "s+'/cgi-bin/lw-scribe'+'/$$scribepath'+" \
-	#   >$(LWCLIENTDIR)/js/lightwave.js
-	# sed "s/\[local\]/$(LWVERSION)/" <client/lightwave.html \
-	#   >$(LWCLIENTDIR)/index.html
+# rm -f $(LWCLIENTDIR)/lightwave.html
+# baseurl=`echo "$(LWSERVERURL)" | cut -d/ -f1-3`; \
+# serverpath=`echo "$(LWSERVERURL)" | cut -d/ -f4-`; \
+# scribepath=`echo "$(LWSCRIBEURL)" | cut -d/ -f4-`; \
+# sed "s+'https://physionet.org'+'$$baseurl'+" \
+#  <client/js/lightwave.js | \
+# sed "s+'/cgi-bin/lightwave'+'/$$serverpath'+" | \
+# sed "s+'/cgi-bin/lw-scribe'+'/$$scribepath'+" \
+#   >$(LWCLIENTDIR)/js/lightwave.js
+# sed "s/\[local\]/$(LWVERSION)/" <client/lightwave.html \
+#   >$(LWCLIENTDIR)/index.html
 
 # Install the LightWAVE server.
 server:	lightwave

@@ -1,0 +1,3 @@
+#!/bin/sh
+cd /Users/kbajalc/Projects/exg-lightwave
+python lw-server

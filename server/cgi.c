@@ -23,7 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <assert.h>
 #include "cgi.h"
 
-static struct {
+static struct
+{
     char *name;
     char **values;
     size_t n_values;
@@ -32,20 +33,24 @@ static struct {
 
 static size_t n_query_params;
 
-#define XALLOC0(arr, n) do {                            \
-        void *p_ = calloc((n), sizeof((arr)[0]));       \
-        assert(p_ != NULL);                             \
-        (arr) = p_;                                     \
+#define XALLOC0(arr, n)                           \
+    do                                            \
+    {                                             \
+        void *p_ = calloc((n), sizeof((arr)[0])); \
+        assert(p_ != NULL);                       \
+        (arr) = p_;                               \
     } while (0)
 
-#define XREALLOC(arr, n) do {                              \
-        void *p_ = (arr);                                  \
-        size_t n_ = (n);                                   \
-        size_t m_ = sizeof((arr)[0]);                      \
-        assert(n_ <= ((size_t) -1 / m_));                  \
-        p_ = realloc(p_, n_ * m_);                         \
-        assert(p_ != NULL);                                \
-        (arr) = p_;                                        \
+#define XREALLOC(arr, n)                   \
+    do                                     \
+    {                                      \
+        void *p_ = (arr);                  \
+        size_t n_ = (n);                   \
+        size_t m_ = sizeof((arr)[0]);      \
+        assert(n_ <= ((size_t) - 1 / m_)); \
+        p_ = realloc(p_, n_ * m_);         \
+        assert(p_ != NULL);                \
+        (arr) = p_;                        \
     } while (0)
 
 void cgi_init(void)
@@ -72,21 +77,19 @@ static char *url_decode(const char *str, size_t len)
     char *s;
     size_t i, j, dlen;
 
-    for (i = dlen = 0; i < len; i++) {
-        if (str[i] == '%' && i + 2 < len
-            && xdigitvalue(str[i + 1]) >= 0
-            && xdigitvalue(str[i + 2]) >= 0)
+    for (i = dlen = 0; i < len; i++)
+    {
+        if (str[i] == '%' && i + 2 < len && xdigitvalue(str[i + 1]) >= 0 && xdigitvalue(str[i + 2]) >= 0)
             i += 2;
         dlen++;
     }
     XALLOC0(s, dlen + 1);
 
-    for (i = j = 0; i < len; i++) {
-        if (str[i] == '%' && i + 2 < len
-            && xdigitvalue(str[i + 1]) >= 0
-            && xdigitvalue(str[i + 2]) >= 0) {
-            s[j] = (xdigitvalue(str[i + 1]) << 4
-                    | xdigitvalue(str[i + 2]));
+    for (i = j = 0; i < len; i++)
+    {
+        if (str[i] == '%' && i + 2 < len && xdigitvalue(str[i + 1]) >= 0 && xdigitvalue(str[i + 2]) >= 0)
+        {
+            s[j] = (xdigitvalue(str[i + 1]) << 4 | xdigitvalue(str[i + 2]));
             i += 2;
         }
         else if (str[i] == '+')
@@ -107,13 +110,15 @@ static void parse_param(const char *str, size_t len)
     char *nstr, *vstr;
 
     val = memchr(str, '=', len);
-    if (val) {
+    if (val)
+    {
         assert(val >= str && val < str + len);
         nlen = val - str;
         val++;
         vlen = len - nlen - 1;
     }
-    else {
+    else
+    {
         nlen = len;
         val = "";
         vlen = 0;
@@ -122,8 +127,10 @@ static void parse_param(const char *str, size_t len)
     nstr = url_decode(str, nlen);
     vstr = url_decode(val, vlen);
 
-    for (i = 0; i < n_query_params; i++) {
-        if (!strcmp(query_params[i].name, nstr)) {
+    for (i = 0; i < n_query_params; i++)
+    {
+        if (!strcmp(query_params[i].name, nstr))
+        {
             n = query_params[i].n_values;
             XREALLOC(query_params[i].values, n + 1);
             query_params[i].values[n] = vstr;
@@ -155,7 +162,8 @@ void cgi_process_form(void)
     if (!qstr)
         return;
 
-    while (*qstr) {
+    while (*qstr)
+    {
         len = strcspn(qstr, ";&");
         if (len > 0)
             parse_param(qstr, len);
@@ -171,9 +179,7 @@ char *cgi_param(const char *name)
 {
     size_t i;
     for (i = 0; i < n_query_params; i++)
-        if (query_params && query_params[i].name
-            && !strcmp(name, query_params[i].name)
-            && query_params[i].values)
+        if (query_params && query_params[i].name && !strcmp(name, query_params[i].name) && query_params[i].values)
             return query_params[i].values[0];
     return NULL;
 }
@@ -182,15 +188,17 @@ char *cgi_param_multiple(const char *name)
 {
     size_t i;
 
-    for (i = 0; i < n_query_params; i++) {
-        if (query_params && query_params[i].name
-            && !strcmp(name, query_params[i].name)
-            && query_params[i].values) {
-            if (query_params[i].scan_index < query_params[i].n_values) {
+    for (i = 0; i < n_query_params; i++)
+    {
+        if (query_params && query_params[i].name && !strcmp(name, query_params[i].name) && query_params[i].values)
+        {
+            if (query_params[i].scan_index < query_params[i].n_values)
+            {
                 query_params[i].scan_index++;
                 return query_params[i].values[query_params[i].scan_index - 1];
             }
-            else {
+            else
+            {
                 query_params[i].scan_index = 0;
                 return NULL;
             }

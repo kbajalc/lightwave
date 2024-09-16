@@ -1,5 +1,5 @@
 /* file: lightwave.c	G. Moody	18 November 2012
-			Last revised:	  23 April 2019   version 0.68
+            Last revised:	  23 April 2019   version 0.68
 LightWAVE server
 Copyright (C) 2012-2013 George B. Moody
 
@@ -51,23 +51,23 @@ _______________________________________________________________________________
 #endif
 
 #ifndef BUFSIZE
-#define BUFSIZE 1024	/* bytes read at a time */
+#define BUFSIZE 1024 /* bytes read at a time */
 #endif
 
 /* MFNLEN is the max length of a WFDB filename, defined in wfdb/lib/wfdbio.c. */
-#define MFNLEN	1024
+#define MFNLEN 1024
 
 /* NAMAX is the maximum number of annotators that fetchannotations() will
 attempt to read at one time.  The value is arbitrary and can be increased
 if necessary.  Ideally, if NAMAX annotators are displayed simultaneously
 in LightWAVE's signal window, the user should be able to read all of them. */
-#define NAMAX	16
+#define NAMAX 16
 
 /* TOL is the tolerance for error in approx_LCM, which is used to find the
 (approximate) least common multiple of sampling frequencies that may not
 be integers.  The default value of 0.001 means that the maximum error is
 one part in a thousand (0.1%). */
-#define TOL	0.001
+#define TOL 0.001
 
 static char *action, *annotator[NAMAX], buf[BUFSIZE], *db, *record, *recpath,
     **sname, wfdb_filename[MFNLEN];
@@ -80,7 +80,7 @@ WFDB_Time t0, tf, dt;
 
 char *get_param(char *name), *get_param_multiple(char *name), *strjson(char *s);
 double approx_LCM(double x, double y);
-int  fetchannotations(void), fetchsignals(void), ufindsig(char *name);
+int fetchannotations(void), fetchsignals(void), ufindsig(char *name);
 void dblist(void), rlist(void), alist(void), info(void), fetch(void),
     force_unique_signames(void), print_file(char *filename),
     jsonp_end(void), lwpass(void), lwfail(char *error_message), pnwcheck(void),
@@ -95,57 +95,61 @@ int main(int argc, char **argv)
 
     lightwave_sandbox();
 
-    if (argc < 2) {  /* normal operation as a CGI application */
-	cgi_init();
-	atexit(cgi_end);
-       	cgi_process_form();
-	printf("Content-type: application/javascript; charset=utf-8\r\n\r\n");
+    if (argc < 2)
+    { /* normal operation as a CGI application */
+        cgi_init();
+        atexit(cgi_end);
+        cgi_process_form();
+        printf("Content-type: application/javascript; charset=utf-8\r\n\r\n");
     }
     else
-        interactive = 1;  /* interactive mode for debugging */
-    wfdbquiet();	  /* suppress WFDB library error messages */
-    atexit(cleanup);	/* release allocated memory before exiting */
+        interactive = 1; /* interactive mode for debugging */
+    wfdbquiet();         /* suppress WFDB library error messages */
+    atexit(cleanup);     /* release allocated memory before exiting */
 
     /* Define data sources to be accessed via this server. */
-    setrepos();		/* function defined in "setrepos.c" */
+    setrepos(); /* function defined in "setrepos.c" */
 
-    if (!(action = get_param("action"))) {
-	print_file(LWDIR "/doc/about.txt");
-	exit(0);
+    if (!(action = get_param("action")))
+    {
+        print_file(LWDIR "/doc/about.txt");
+        exit(0);
     }
 
-    if (!interactive && (callback = get_param("callback"))) {
-	printf("%s(", callback);	/* JSONP:  "wrap" output in callback */
-	atexit(jsonp_end);	/* close the output with ")" before exiting */
-	if (getenv("LIGHTWAVE_DISABLE_JSONP")) {
-	    lwfail("This server does not allow JSONP requests");
-	    exit(0);
-	}
+    if (!interactive && (callback = get_param("callback")))
+    {
+        printf("%s(", callback); /* JSONP:  "wrap" output in callback */
+        atexit(jsonp_end);       /* close the output with ")" before exiting */
+        if (getenv("LIGHTWAVE_DISABLE_JSONP"))
+        {
+            lwfail("This server does not allow JSONP requests");
+            exit(0);
+        }
     }
 
     if (strcmp(action, "dblist") == 0)
-	dblist();
+        dblist();
 
     else if ((db = get_param("db")) == NULL)
-	lwfail("Your request did not specify a database");
-  
+        lwfail("Your request did not specify a database");
+
     else if (strcmp(action, "rlist") == 0)
-	rlist();
+        rlist();
 
     else if (strcmp(action, "alist") == 0)
-	alist();
+        alist();
 
     else if ((record = get_param("record")) == NULL)
-	lwfail("Your request did not specify a record");
+        lwfail("Your request did not specify a record");
 
     else if (strcmp(action, "info") == 0)
-	info();
+        info();
 
     else if (strcmp(action, "fetch") == 0)
-	fetch();
+        fetch();
 
     else
-	lwfail("Your request did not specify a valid action");
+        lwfail("Your request did not specify a valid action");
 
     exit(0);
 }
@@ -159,19 +163,22 @@ void prep_signals()
 
     /* Discover the number of signals defined in the header, allocate
        memory for their signal information structures, open the signals. */
-    if ((nsig = isigopen(recpath, NULL, 0)) > 0) {
-	SUALLOC(s, nsig, sizeof(WFDB_Siginfo));
-	nsig = isigopen(recpath, s, nsig);
-    } 
-    else {
-	tfreq = ffreq = sampfreq(NULL);
-	return;
+    if ((nsig = isigopen(recpath, NULL, 0)) > 0)
+    {
+        SUALLOC(s, nsig, sizeof(WFDB_Siginfo));
+        nsig = isigopen(recpath, s, nsig);
+    }
+    else
+    {
+        tfreq = ffreq = sampfreq(NULL);
+        return;
     }
 
     /* Shorten signal names of the form "record xxx, signal N" to "v[N]" */
-    for (n = 0; n < nsig; n++) {
-	if (strncmp(s[n].desc, "record ", 7) == 0)
-	    sprintf(s[n].desc, "v[%d]", n);
+    for (n = 0; n < nsig; n++)
+    {
+        if (strncmp(s[n].desc, "record ", 7) == 0)
+            sprintf(s[n].desc, "v[%d]", n);
     }
 
     /* Make reasonably sure that signal names are distinct (see below). */
@@ -186,10 +193,11 @@ void prep_signals()
        one sample is acquired. */
     setgvmode(WFDB_LOWRES);
     ffreq = sampfreq(NULL);
-    if (ffreq <= 0.) ffreq = WFDB_DEFFREQ;
+    if (ffreq <= 0.)
+        ffreq = WFDB_DEFFREQ;
     for (n = 0, tfreq = ffreq; n < nsig; n++)
-	tfreq = approx_LCM(ffreq * s[n].spf, tfreq);
-}   
+        tfreq = approx_LCM(ffreq * s[n].spf, tfreq);
+}
 
 void lwpass()
 {
@@ -211,11 +219,15 @@ void map_signals()
 
     SUALLOC(sigmap, nsig, sizeof(int));
     for (n = 0; n < nsig; n++)
-	sigmap[n] = -1;
-    while (p = get_param_multiple("signal")) {
-	if ((n = ufindsig(p)) >= 0) {
-	    sigmap[n] = n; n++; nosig++;
-	}
+        sigmap[n] = -1;
+    while (p = get_param_multiple("signal"))
+    {
+        if ((n = ufindsig(p)) >= 0)
+        {
+            sigmap[n] = n;
+            n++;
+            nosig++;
+        }
     }
 }
 
@@ -223,9 +235,10 @@ void prep_annotators()
 {
     char *p;
 
-    while (nann < NAMAX && (p = get_param_multiple("annotator"))) {
-	SSTRCPY(annotator[nann], p);
-	nann++;
+    while (nann < NAMAX && (p = get_param_multiple("annotator")))
+    {
+        SSTRCPY(annotator[nann], p);
+        nann++;
     }
 }
 
@@ -233,10 +246,13 @@ void prep_times()
 {
     char *p;
 
-    if ((p = get_param("t0")) == NULL) p = "0";
-    if ((t0 = strtim(p)) < 0L) t0 = -t0;
-    if ((p = get_param("dt")) == NULL) p = "1";
-	
+    if ((p = get_param("t0")) == NULL)
+        p = "0";
+    if ((t0 = strtim(p)) < 0L)
+        t0 = -t0;
+    if ((p = get_param("dt")) == NULL)
+        p = "1";
+
     /* dt is the amount of data to be retrieved.  On input, dt is in seconds,
        but the next block of code converts it to sample intervals.  There are
        several special cases:
@@ -253,11 +269,15 @@ void prep_times()
        from a single request.
     */
     dt = atoi(p);
-    if (dt <= 0) dt = 0;
-    else {
-	dt *= ffreq;
-	if (dt < 1) dt = 1;
-	else if (dt > 120*ffreq && dt > 120000) dt = 120*ffreq;
+    if (dt <= 0)
+        dt = 0;
+    else
+    {
+        dt *= ffreq;
+        if (dt < 1)
+            dt = 1;
+        else if (dt > 120 * ffreq && dt > 120000)
+            dt = 120 * ffreq;
     }
     tf = t0 + dt;
 }
@@ -268,11 +288,15 @@ double approx_LCM(double x, double y)
 {
     double x0 = x, y0 = y, z;
 
-    if (x <= 0. || y <= 0.) return (0.);	/* this shouldn't happen! */
-    while (-TOL > (z = x/y - 1) || z > TOL) {
-	if (x < y) x+= x0;
-	else y += y0;
-	/* when x and y are nearly equal, z is close to zero */
+    if (x <= 0. || y <= 0.)
+        return (0.); /* this shouldn't happen! */
+    while (-TOL > (z = x / y - 1) || z > TOL)
+    {
+        if (x < y)
+            x += x0;
+        else
+            y += y0;
+        /* when x and y are nearly equal, z is close to zero */
     }
     return (x);
 }
@@ -284,11 +308,12 @@ char *prompt(char *prompt_string)
 
     fprintf(stderr, "%s: ", prompt_string);
     fflush(stderr);
-    buf[0] = '\0';  /* clear previous content in case of EOF on stdin */
-    if (fgets(buf, sizeof(buf), stdin)) {
-        buf[strlen(buf)-1] = '\0';  /* discard trailing newline */
-	if (buf[0])
-	    SSTRCPY(p, buf);
+    buf[0] = '\0'; /* clear previous content in case of EOF on stdin */
+    if (fgets(buf, sizeof(buf), stdin))
+    {
+        buf[strlen(buf) - 1] = '\0'; /* discard trailing newline */
+        if (buf[0])
+            SSTRCPY(p, buf);
     }
     return (p); /* Yes, it's a memory leak.  So sue me! */
 }
@@ -296,38 +321,43 @@ char *prompt(char *prompt_string)
 /* Read a single-valued parameter interactively or from form. */
 char *get_param(char *name)
 {
-    if (interactive) return prompt(name);
-    else return cgi_param(name);
+    if (interactive)
+        return prompt(name);
+    else
+        return cgi_param(name);
 }
 
 /* Read next value of a multi-valued parameter interactively or from form. */
 char *get_param_multiple(char *name)
 {
-    if (interactive) return prompt(name);
-    else return cgi_param_multiple(name);
+    if (interactive)
+        return prompt(name);
+    else
+        return cgi_param_multiple(name);
 }
 
 /* Return the length of a UTF-8 character in bytes, or 0 if the input
    is not valid UTF-8. */
 static int utf8_char_len(const char *s)
 {
-    unsigned int c = (unsigned char) s[0], n = 0, i;
-    static const unsigned int min[] = { 0x80, 0x800, 0x10000 };
+    unsigned int c = (unsigned char)s[0], n = 0, i;
+    static const unsigned int min[] = {0x80, 0x800, 0x10000};
 
     if (c < 0x80)
-	return 1;
+        return 1;
     while (c & (0x80 >> n))
-	n++;
+        n++;
     if (n < 2 || n > 4)
-	return 0;
+        return 0;
     c &= (0x7f >> n);
-    for (i = 1; i < n; i++) {
-	if (((unsigned char) s[i] & 0xc0) != 0x80)
-	    return 0;
-	c = (c << 6) | ((unsigned char) s[i] & 0x3f);
+    for (i = 1; i < n; i++)
+    {
+        if (((unsigned char)s[i] & 0xc0) != 0x80)
+            return 0;
+        c = (c << 6) | ((unsigned char)s[i] & 0x3f);
     }
     if (c < min[n - 2] || c > 0x10ffff || (c & ~0x7ff) == 0xd800)
-	return 0;
+        return 0;
     return n;
 }
 
@@ -344,28 +374,34 @@ char *strjson(char *s)
 
     /* Get the length of the input string and count the characters that must
        be escaped in it. */
-    for (i = q = 0; s[i]; i++) {
-	if (s[i] == '"' || s[i] == '\\') q++;
-	else if ((unsigned char) s[i] < 0x20) s[i] = ' ';
-	else if ((unsigned char) s[i] >= 0x80) {
-	    j = utf8_char_len(&s[i]);
-	    if (j == 0)
-		s[i] = '?';
-	    else
-		i += j - 1;
-	}
-    }    
+    for (i = q = 0; s[i]; i++)
+    {
+        if (s[i] == '"' || s[i] == '\\')
+            q++;
+        else if ((unsigned char)s[i] < 0x20)
+            s[i] = ' ';
+        else if ((unsigned char)s[i] >= 0x80)
+        {
+            j = utf8_char_len(&s[i]);
+            if (j == 0)
+                s[i] = '?';
+            else
+                i += j - 1;
+        }
+    }
     imax = i;
 
     /* Allocate memory for the output string. */
-    SUALLOC(js, i+q+3, sizeof(char));
+    SUALLOC(js, i + q + 3, sizeof(char));
 
     /* Wrap the input string with '"' characters and escape any '"' characters
        embedded within it. */
     js[0] = '"';
-    for (i = 0, j = 1; i < imax; i++, j++) {
-	if (s[i] == '"' || s[i] == '\\') js[j++] = '\\';
-	js[j] = s[i];
+    for (i = 0, j = 1; i < imax; i++, j++)
+    {
+        if (s[i] == '"' || s[i] == '\\')
+            js[j++] = '\\';
+        js[j] = s[i];
     }
     js[j++] = '"';
     js[j] = '\0';
@@ -376,12 +412,13 @@ void print_file(char *filename)
 {
     FILE *ifile = fopen(filename, "r");
 
-    if (ifile == NULL) {
-	printf("lightwave: can't open %s\n", filename);
-	return;
+    if (ifile == NULL)
+    {
+        printf("lightwave: can't open %s\n", filename);
+        return;
     }
     while (fgets(buf, sizeof(buf), ifile))
-	fputs(buf, stdout);
+        fputs(buf, stdout);
     fclose(ifile);
 }
 
@@ -398,141 +435,176 @@ void dblist(void)
 
     /* If $LIGHTWAVE_DBLIST is set, the value of this variable
        contains the list of available databases. */
-    if ((list = getenv("LIGHTWAVE_DBLIST"))) {
-	while (list) {
-	    char *p, *name, *desc;
-	    next = strchr(list, '\n');
-	    if (next)
-		*next++ = 0;
-	    if ((p = strchr(list, '\t'))) {
-		*p++ = 0;
-		while (*p == '\t')
-		    p++;
-		if (first) printf("{ \"database\": [\n");
-		else printf(",\n");
-		first = 0;
-		name = strjson(list);
-		desc = strjson(p);
-		printf("    { \"name\": %s,\n      \"desc\": %s\n    }",
-		       name, desc);
-		SFREE(desc);
-		SFREE(name);
-	    }
-	    list = next;
-	}
-	wfdb = "";
+    if ((list = getenv("LIGHTWAVE_DBLIST")))
+    {
+        while (list)
+        {
+            char *p, *name, *desc;
+            next = strchr(list, '\n');
+            if (next)
+                *next++ = 0;
+            if ((p = strchr(list, '\t')))
+            {
+                *p++ = 0;
+                while (*p == '\t')
+                    p++;
+                if (first)
+                    printf("{ \"database\": [\n");
+                else
+                    printf(",\n");
+                first = 0;
+                name = strjson(list);
+                desc = strjson(p);
+                printf("    { \"name\": %s,\n      \"desc\": %s\n    }",
+                       name, desc);
+                SFREE(desc);
+                SFREE(name);
+            }
+            list = next;
+        }
+        wfdb = "";
     }
     /* Otherwise, read the list of databases from the DBS file(s). */
-    while (*wfdb) {
-	/* Isolate the next component of the WFDB path. */
-	for (next = wfdb; *next && next - wfdb < MFNLEN - 6; next++)
-	    if (*next == ' ') { *next++ = '\0'; break; }
-	/* Look for a "DBS" file in the next possible location. */
-	sprintf(wfdb_filename, "%s/DBS", wfdb);
-	if ((ifile = wfdb_fopen(wfdb_filename, "rb")) != NULL) {
-	    if (first) printf("{ \"database\": [\n");
-	    while (wfdb_fgets(buf, sizeof(buf), ifile)) {
-		char *p, *name, *desc;
+    while (*wfdb)
+    {
+        /* Isolate the next component of the WFDB path. */
+        for (next = wfdb; *next && next - wfdb < MFNLEN - 6; next++)
+            if (*next == ' ')
+            {
+                *next++ = '\0';
+                break;
+            }
+        /* Look for a "DBS" file in the next possible location. */
+        sprintf(wfdb_filename, "%s/DBS", wfdb);
+        if ((ifile = wfdb_fopen(wfdb_filename, "rb")) != NULL)
+        {
+            if (first)
+                printf("{ \"database\": [\n");
+            while (wfdb_fgets(buf, sizeof(buf), ifile))
+            {
+                char *p, *name, *desc;
 
-		for (p = buf; p < buf + sizeof(buf) && *p != '\t'; p++)
-		    ;
-		if (*p != '\t') continue;
-		*p++ = '\0';
-		while (p < buf + sizeof(buf) - 1 && *p == '\t')
-		    p++;
-		p[strlen(p)-1] = '\0';
-		if (!first) printf(",\n");
-		else first = 0;
-		name = strjson(buf);
-		desc = strjson(p);
-		printf("    { \"name\": %s,\n      \"desc\": %s\n    }",
-		       name, desc);
-		SFREE(desc);
-		SFREE(name);
-	    }
-	    wfdb_fclose(ifile);
-	    first = 0; /* ensure that the database array will be closed in the
-			  output even if the DBS file was empty */
-	}
-	wfdb = next;  /* prepare to search the next location in the WFDB path */
+                for (p = buf; p < buf + sizeof(buf) && *p != '\t'; p++)
+                    ;
+                if (*p != '\t')
+                    continue;
+                *p++ = '\0';
+                while (p < buf + sizeof(buf) - 1 && *p == '\t')
+                    p++;
+                p[strlen(p) - 1] = '\0';
+                if (!first)
+                    printf(",\n");
+                else
+                    first = 0;
+                name = strjson(buf);
+                desc = strjson(p);
+                printf("    { \"name\": %s,\n      \"desc\": %s\n    }",
+                       name, desc);
+                SFREE(desc);
+                SFREE(name);
+            }
+            wfdb_fclose(ifile);
+            first = 0; /* ensure that the database array will be closed in the
+                  output even if the DBS file was empty */
+        }
+        wfdb = next; /* prepare to search the next location in the WFDB path */
     }
-    if (!first) {
-	printf("\n  ],\n");
-	printf("  \"version\": \"%s\",\n", LWVER);
+    if (!first)
+    {
+        printf("\n  ],\n");
+        printf("  \"version\": \"%s\",\n", LWVER);
         lwpass();
     }
-    else {
-	lwfail("The list of databases could not be read");
+    else
+    {
+        lwfail("The list of databases could not be read");
     }
 }
 
 void rlist(void)
 {
     sprintf(buf, "%s/RECORDS", db);
-    if (ifile = wfdb_open(buf, NULL, WFDB_READ)) {
-	char *p;
+    if (ifile = wfdb_open(buf, NULL, WFDB_READ))
+    {
+        char *p;
         int first = 1;
 
         printf("{ \"record\": [\n");
-	while (wfdb_fgets(buf, sizeof(buf), ifile)) {
-	    buf[strlen(buf)-1] = '\0';
-	    if (!first) printf(",\n");
-	    else first = 0;
-	    printf("    %s", p = strjson(buf));
-	    SFREE(p);
-	}
-	printf("\n  ],\n");
-	lwpass();
-	wfdb_fclose(ifile);
+        while (wfdb_fgets(buf, sizeof(buf), ifile))
+        {
+            buf[strlen(buf) - 1] = '\0';
+            if (strlen(buf) == 0 || buf[0] == '#') continue;
+            if (!first)
+                printf(",\n");
+            else
+                first = 0;
+            printf("    %s", p = strjson(buf));
+            SFREE(p);
+        }
+        printf("\n  ],\n");
+        lwpass();
+        wfdb_fclose(ifile);
     }
     else
-	lwfail("The list of records could not be read");
+        lwfail("The list of records could not be read");
 }
 
 void alist(void)
 {
     char *next, *wfdb = getwfdb();
     int first = 1, mfnlen = MFNLEN - strlen(db) - 12;
-   
-    while (*wfdb) {
-	/* Isolate the next component of the WFDB path. */
-	for (next = wfdb; *next && next - wfdb < mfnlen; next++)
-	    if (*next == ' ') { *next++ = '\0'; break; }
-	/* Look for an "ANNOTATORS" file in the next possible location. */
-	sprintf(wfdb_filename, "%s/%s/ANNOTATORS", wfdb, db);
-	if (ifile = wfdb_fopen(wfdb_filename, "rb")) {
-	    if (first) printf("{ \"annotator\": [\n");
-	    while (wfdb_fgets(buf, sizeof(buf), ifile)) {
-		char *p, *name, *desc;
 
-		for (p = buf; p < buf + sizeof(buf) && *p != '\t'; p++)
-		    ;
-		if (*p != '\t') continue;
-		*p++ = '\0';
-		while (p < buf + sizeof(buf) - 1 && *p == '\t')
-		    p++;
-		p[strlen(p)-1] = '\0';
-		if (!first) printf(",\n");
-		else first = 0;
-		name = strjson(buf);
-		desc = strjson(p);
-		printf("    { \"name\": %s,\n      \"desc\": %s\n    }",
-		       name, desc);
-		SFREE(desc);
-		SFREE(name);
-	    }
-	    wfdb_fclose(ifile);
-	    first = 0; /* ensure that the annotator array will be closed in the
-			  output even if the ANNOTATORS file was empty */
-	}
-	wfdb = next;  /* prepare to search the next location in the WFDB path */
+    while (*wfdb)
+    {
+        /* Isolate the next component of the WFDB path. */
+        for (next = wfdb; *next && next - wfdb < mfnlen; next++)
+            if (*next == ' ')
+            {
+                *next++ = '\0';
+                break;
+            }
+        /* Look for an "ANNOTATORS" file in the next possible location. */
+        sprintf(wfdb_filename, "%s/%s/ANNOTATORS", wfdb, db);
+        if (ifile = wfdb_fopen(wfdb_filename, "rb"))
+        {
+            if (first)
+                printf("{ \"annotator\": [\n");
+            while (wfdb_fgets(buf, sizeof(buf), ifile))
+            {
+                char *p, *name, *desc;
+
+                for (p = buf; p < buf + sizeof(buf) && *p != '\t'; p++)
+                    ;
+                if (*p != '\t')
+                    continue;
+                *p++ = '\0';
+                while (p < buf + sizeof(buf) - 1 && *p == '\t')
+                    p++;
+                p[strlen(p) - 1] = '\0';
+                if (!first)
+                    printf(",\n");
+                else
+                    first = 0;
+                name = strjson(buf);
+                desc = strjson(p);
+                printf("    { \"name\": %s,\n      \"desc\": %s\n    }",
+                       name, desc);
+                SFREE(desc);
+                SFREE(name);
+            }
+            wfdb_fclose(ifile);
+            first = 0; /* ensure that the annotator array will be closed in the
+                  output even if the ANNOTATORS file was empty */
+        }
+        wfdb = next; /* prepare to search the next location in the WFDB path */
     }
-    if (!first) {
-	printf("\n  ],\n");
-	lwpass();
+    if (!first)
+    {
+        printf("\n  ],\n");
+        lwpass();
     }
     else
-	lwfail("The list of annotators could not be read");
+        lwfail("The list of annotators could not be read");
 }
 
 void info(void)
@@ -542,64 +614,77 @@ void info(void)
     WFDB_Time t;
 
     prep_signals();
-    if (nsig < 0) {
-	lwfail("The '.hea' file could not be read");
-	return;
+    if (nsig < 0)
+    {
+        lwfail("The '.hea' file could not be read");
+        return;
     }
     printf("{ \"info\":\n");
-    printf("  { \"db\": %s,\n", p = strjson(db)); SFREE(p);
-    printf("    \"record\": %s,\n", p = strjson(record)); SFREE(p);
+    printf("  { \"db\": %s,\n", p = strjson(db));
+    SFREE(p);
+    printf("    \"record\": %s,\n", p = strjson(record));
+    SFREE(p);
     printf("    \"tfreq\": %g,\n", tfreq);
     p = timstr(0);
-    if (*p == '[') {
+    if (*p == '[')
+    {
         printf("    \"start\": \"%s\",\n", mstimstr(0L));
-	printf("    \"end\": \"%s\",\n", mstimstr(-strtim("e")));
+        printf("    \"end\": \"%s\",\n", mstimstr(-strtim("e")));
     }
-    else {
+    else
+    {
         printf("    \"start\": null,\n");
-	printf("    \"end\": null,\n");
+        printf("    \"end\": null,\n");
     }
     t = strtim("e");
-    if (t > (WFDB_Time)0) {
-	p = mstimstr(t);
-	while (*p == ' ') p++;
-	printf("    \"duration\": \"%s\",\n", p);
+    if (t > (WFDB_Time)0)
+    {
+        p = mstimstr(t);
+        while (*p == ' ')
+            p++;
+        printf("    \"duration\": \"%s\",\n", p);
     }
     else
-	printf("    \"duration\": null,\n");
+        printf("    \"duration\": null,\n");
 
-    if (nsig > 0) {
-	printf("    \"signal\": [\n");
-	for (i = 0; i < nsig; i++) {
-	    printf("      { \"name\": %s,\n", p = strjson(sname[i])); SFREE(p);
-	    printf("        \"tps\": %g,\n", tfreq/(ffreq*s[i].spf));
-	    if (s[i].units) {
-		printf("        \"units\": %s,\n", p = strjson(s[i].units));
-		SFREE(p);
-	    }
-	    else
-		printf("        \"units\": null,\n");
-	    printf("        \"gain\": %g,\n",
-		   s[i].gain ? s[i].gain : WFDB_DEFGAIN);
-	    printf("        \"adcres\": %d,\n", s[i].adcres);
-	    printf("        \"adczero\": %d,\n", s[i].adczero);
-	    printf("        \"baseline\": %d\n", s[i].baseline);
-	    printf("      }%s", i < nsig-1 ? ",\n" : "\n    ],\n");
-	}
+    if (nsig > 0)
+    {
+        printf("    \"signal\": [\n");
+        for (i = 0; i < nsig; i++)
+        {
+            printf("      { \"name\": %s,\n", p = strjson(sname[i]));
+            SFREE(p);
+            printf("        \"tps\": %g,\n", tfreq / (ffreq * s[i].spf));
+            if (s[i].units)
+            {
+                printf("        \"units\": %s,\n", p = strjson(s[i].units));
+                SFREE(p);
+            }
+            else
+                printf("        \"units\": null,\n");
+            printf("        \"gain\": %g,\n",
+                   s[i].gain ? s[i].gain : WFDB_DEFGAIN);
+            printf("        \"adcres\": %d,\n", s[i].adcres);
+            printf("        \"adczero\": %d,\n", s[i].adczero);
+            printf("        \"baseline\": %d\n", s[i].baseline);
+            printf("      }%s", i < nsig - 1 ? ",\n" : "\n    ],\n");
+        }
     }
     else
-	printf("    \"signal\": null,\n");
+        printf("    \"signal\": null,\n");
 
-    if (info = getinfo(recpath)) {
-	printf("    \"note\": [\n      %s", p = strjson(info));
-	while (info = getinfo((char *)NULL)) {
-	    printf(",\n      %s", p = strjson(info));
-	    SFREE(p);
-	}
-	printf("\n    ]\n");
+    if (info = getinfo(recpath))
+    {
+        printf("    \"note\": [\n      %s", p = strjson(info));
+        while (info = getinfo((char *)NULL))
+        {
+            printf(",\n      %s", p = strjson(info));
+            SFREE(p);
+        }
+        printf("\n    ]\n");
     }
     else
-	printf("    \"note\": null\n");
+        printf("    \"note\": null\n");
 
     printf("  },\n");
     lwpass();
@@ -611,75 +696,93 @@ int fetchannotations(void)
     WFDB_Anninfo ai;
     WFDB_Time ta0, taf;
 
-    if (nann < 1) return (0);
-    if (tfreq != ffreq) {
-	ta0 = (WFDB_Time)(t0*tfreq/ffreq + 0.5);
-	taf = (WFDB_Time)(tf*tfreq/ffreq + 0.5);
+    if (nann < 1)
+        return (0);
+    if (tfreq != ffreq)
+    {
+        ta0 = (WFDB_Time)(t0 * tfreq / ffreq + 0.5);
+        taf = (WFDB_Time)(tf * tfreq / ffreq + 0.5);
     }
-    else {
-	ta0 = t0;
-	taf = tf;
+    else
+    {
+        ta0 = t0;
+        taf = tf;
     }
 
-    printf("  %c \"annotator\":\n    [", nosig > 0 ? ' ' : '{');  
+    printf("  %c \"annotator\":\n    [", nosig > 0 ? ' ' : '{');
     setgvmode(WFDB_HIGHRES);
-    for (i = 0; i < nann; i++) {
-	ai.name = annotator[i];
-	ai.stat = WFDB_READ;
-	if (annopen(recpath, &ai, 1) >= 0) {
-	    char *p;
-	    int first = 1;
-	    WFDB_Annotation annot;
-	    unsigned char used[ACMAX + 1] = { 0 };
-	    int j, k;
+    for (i = 0; i < nann; i++)
+    {
+        ai.name = annotator[i];
+        ai.stat = WFDB_READ;
+        if (annopen(recpath, &ai, 1) >= 0)
+        {
+            char *p;
+            int first = 1;
+            WFDB_Annotation annot;
+            unsigned char used[ACMAX + 1] = {0};
+            int j, k;
 
-	    if (ta0 > 0L) iannsettime(ta0);
-	    if (!afirst) printf(",");
-	    else afirst = 0;
-	    printf("\n      { \"name\": \"%s\",\n", annotator[i]);
-	    printf("        \"annotation\":\n");
-	    printf("        [");
-	    while ((getann(0, &annot) == 0) && (taf <= 0 || annot.time < taf)) {
-		if (!first) printf(",");
-		else first = 0;
-		if (annot.anntyp > 0 && annot.anntyp <= ACMAX)
-		    used[annot.anntyp] = 1;
-		printf("\n          { \"t\": %ld,\n", (long)(annot.time));
-		printf("            \"a\": %s,\n",
-		       p = strjson(annstr(annot.anntyp)));
-		SFREE(p);
-		printf("            \"s\": %d,\n", annot.subtyp);
-		printf("            \"c\": %d,\n", annot.chan);
-		printf("            \"n\": %d,\n", annot.num);
-		if (annot.aux && *(annot.aux)) {
-		    printf("            \"x\": %s\n", p = strjson(annot.aux+1));
-		    SFREE(p);
-		}
-		else
-		    printf("            \"x\": null\n");
-		printf("          }");
-	    }
-	    printf("\n        ],\n        \"description\":\n        {");
+            if (ta0 > 0L)
+                iannsettime(ta0);
+            if (!afirst)
+                printf(",");
+            else
+                afirst = 0;
+            printf("\n      { \"name\": \"%s\",\n", annotator[i]);
+            printf("        \"annotation\":\n");
+            printf("        [");
+            while ((getann(0, &annot) == 0) && (taf <= 0 || annot.time < taf))
+            {
+                if (!first)
+                    printf(",");
+                else
+                    first = 0;
+                if (annot.anntyp > 0 && annot.anntyp <= ACMAX)
+                    used[annot.anntyp] = 1;
+                printf("\n          { \"t\": %ld,\n", (long)(annot.time));
+                printf("            \"a\": %s,\n",
+                       p = strjson(annstr(annot.anntyp)));
+                SFREE(p);
+                printf("            \"s\": %d,\n", annot.subtyp);
+                printf("            \"c\": %d,\n", annot.chan);
+                printf("            \"n\": %d,\n", annot.num);
+                if (annot.aux && *(annot.aux))
+                {
+                    printf("            \"x\": %s\n", p = strjson(annot.aux + 1));
+                    SFREE(p);
+                }
+                else
+                    printf("            \"x\": null\n");
+                printf("          }");
+            }
+            printf("\n        ],\n        \"description\":\n        {");
 
-	    /* Do not show descriptions for ambiguous mnemonics. */
-	    for (j = 1; j < ACMAX; j++) {
-		k = strann(annstr(j));
-		if (j != k && k > 0 && k < ACMAX)
-		    used[j] = used[k] = 0;
-	    }
-	    first = 1;
-	    for (j = 1; j <= ACMAX; j++) {
-		if (used[j] && (p = anndesc(j)) && p[0]) {
-		    if (!first) printf(",");
-		    else first = 0;
-		    printf("\n          %s: ", p = strjson(annstr(j)));;
-		    SFREE(p);
-		    printf("%s", p = strjson(anndesc(j)));
-		    SFREE(p);
-		}
-	    }
-	    printf("\n        }\n      }");
-	}
+            /* Do not show descriptions for ambiguous mnemonics. */
+            for (j = 1; j < ACMAX; j++)
+            {
+                k = strann(annstr(j));
+                if (j != k && k > 0 && k < ACMAX)
+                    used[j] = used[k] = 0;
+            }
+            first = 1;
+            for (j = 1; j <= ACMAX; j++)
+            {
+                if (used[j] && (p = anndesc(j)) && p[0])
+                {
+                    if (!first)
+                        printf(",");
+                    else
+                        first = 0;
+                    printf("\n          %s: ", p = strjson(annstr(j)));
+                    ;
+                    SFREE(p);
+                    printf("%s", p = strjson(anndesc(j)));
+                    SFREE(p);
+                }
+            }
+            printf("\n        }\n      }");
+        }
     }
     printf("\n    ]\n  }\n");
     return (1);
@@ -692,101 +795,116 @@ int fetchsignals(void)
     WFDB_Sample **sb, **sp, *sbo, *spo, *v;
     WFDB_Time t, ts0, tsf;
 
-    /* Do nothing if no samples were requested. */ 
-    if (nosig < 1 || t0 >= tf) return (0);
+    /* Do nothing if no samples were requested. */
+    if (nosig < 1 || t0 >= tf)
+        return (0);
 
     /* Open the signal calibration database. */
     (void)calopen(NULL);
 
-    if (tfreq != ffreq) {
-	ts0 = (WFDB_Time)(t0*tfreq/ffreq + 0.5);
-	tsf = (WFDB_Time)(tf*tfreq/ffreq + 0.5);
+    if (tfreq != ffreq)
+    {
+        ts0 = (WFDB_Time)(t0 * tfreq / ffreq + 0.5);
+        tsf = (WFDB_Time)(tf * tfreq / ffreq + 0.5);
     }
-    else {
-	ts0 = t0;
-	tsf = tf;
+    else
+    {
+        ts0 = t0;
+        tsf = tf;
     }
 
     /* Allocate buffers and buffer pointers for each selected signal. */
     SUALLOC(sb, nsig, sizeof(WFDB_Sample *));
     SUALLOC(sp, nsig, sizeof(WFDB_Sample *));
     for (n = framelen = 0; n < nsig; framelen += s[n++].spf)
-	if (sigmap[n] >= 0) {
-	    SUALLOC(sb[n], (int)((tf-t0)*s[n].spf + 0.5), sizeof(WFDB_Sample));
-	    sp[n] = sb[n];
-	}
+        if (sigmap[n] >= 0)
+        {
+            SUALLOC(sb[n], (int)((tf - t0) * s[n].spf + 0.5), sizeof(WFDB_Sample));
+            sp[n] = sb[n];
+        }
     /* Allocate a frame buffer and construct the frame map. */
-    SUALLOC(v, framelen, sizeof(WFDB_Sample));  /* frame buffer */
-    SUALLOC(m, framelen, sizeof(int));	    /* frame map */
-    for (i = n = 0; n < nsig; n++) {
-	for (j = 0; j < s[n].spf; j++)
-	    m[i++] = sigmap[n];
+    SUALLOC(v, framelen, sizeof(WFDB_Sample)); /* frame buffer */
+    SUALLOC(m, framelen, sizeof(int));         /* frame map */
+    for (i = n = 0; n < nsig; n++)
+    {
+        for (j = 0; j < s[n].spf; j++)
+            m[i++] = sigmap[n];
     }
-    for (imax = framelen-1; imax > 0 && m[imax] < 0; imax--)
-	;
+    for (imax = framelen - 1; imax > 0 && m[imax] < 0; imax--)
+        ;
     for (imin = 0; imin < imax && m[imin] < 0; imin++)
-	;
+        ;
 
     /* Fill the buffers. */
     isigsettime(t0);
     for (t = t0; t < tf && getframe(v) > 0; t++)
-	for (i = imin, mp = m + imin; i <= imax; i++, mp++)
-	    if ((n = *mp) >= 0) *(sp[n]++) = v[i];
+        for (i = imin, mp = m + imin; i <= imax; i++, mp++)
+            if ((n = *mp) >= 0)
+                *(sp[n]++) = v[i];
 
     /* Generate output. */
-    printf("  { \"signal\":\n    [\n");  
-    for (n = 0; n < nsig; n++) {
-	if (sigmap[n] >= 0) {
-	    char *p;
-	    int delta, prev; 
+    printf("  { \"signal\":\n    [\n");
+    for (n = 0; n < nsig; n++)
+    {
+        if (sigmap[n] >= 0)
+        {
+            char *p;
+            int delta, prev;
 
- 	    if (!first) printf(",\n");
-	    else first = 0;
-	    printf("      { \"name\": %s,\n", p = strjson(sname[n])); SFREE(p);
-	    if (s[n].units) {
-		printf("        \"units\": %s,\n", p = strjson(s[n].units));
-		SFREE(p);
-	    }
-	    else
-		printf("        \"units\": \"mV\",\n");
-	    printf("        \"t0\": %ld,\n", (long)ts0);
-	    printf("        \"tf\": %ld,\n", (long)tsf);
-	    printf("        \"gain\": %g,\n",
-		   s[n].gain ? s[n].gain : WFDB_DEFGAIN);
-	    printf("        \"base\": %d,\n", s[n].baseline);
-	    printf("        \"tps\": %d,\n", (int)(tfreq/(ffreq*s[n].spf)+0.5));
-	    if (getcal(sname[n], s[n].units, &cal) == 0)
-		printf("        \"scale\": %g,\n", cal.scale);
-	    else
-		printf("        \"scale\": 1,\n");
-	    printf("        \"samp\": [ ");
-	    for (sbo = sb[n], prev = 0, spo = sp[n]-1; sbo < spo; sbo++) {
-		delta = *sbo - prev;
-		printf("%d,", delta);
-		prev = *sbo;
-	    }
-	    printf("%d ]\n      }", *sbo - prev);
-	}
+            if (!first)
+                printf(",\n");
+            else
+                first = 0;
+            printf("      { \"name\": %s,\n", p = strjson(sname[n]));
+            SFREE(p);
+            if (s[n].units)
+            {
+                printf("        \"units\": %s,\n", p = strjson(s[n].units));
+                SFREE(p);
+            }
+            else
+                printf("        \"units\": \"mV\",\n");
+            printf("        \"t0\": %ld,\n", (long)ts0);
+            printf("        \"tf\": %ld,\n", (long)tsf);
+            printf("        \"gain\": %g,\n",
+                   s[n].gain ? s[n].gain : WFDB_DEFGAIN);
+            printf("        \"base\": %d,\n", s[n].baseline);
+            printf("        \"tps\": %d,\n", (int)(tfreq / (ffreq * s[n].spf) + 0.5));
+            if (getcal(sname[n], s[n].units, &cal) == 0)
+                printf("        \"scale\": %g,\n", cal.scale);
+            else
+                printf("        \"scale\": 1,\n");
+            printf("        \"samp\": [ ");
+            for (sbo = sb[n], prev = 0, spo = sp[n] - 1; sbo < spo; sbo++)
+            {
+                delta = *sbo - prev;
+                printf("%d,", delta);
+                prev = *sbo;
+            }
+            printf("%d ]\n      }", *sbo - prev);
+        }
     }
     printf("\n    ]%s", nann ? ",\n" : "\n  }\n");
     flushcal();
     for (n = 0; n < nsig; n++)
-	SFREE(sb[n]);
+        SFREE(sb[n]);
     SFREE(sb);
     SFREE(sp);
     SFREE(v);
     SFREE(m);
-    return (1);	/* output was written */
+    return (1); /* output was written */
 }
 
 void fetch(void)
 {
     prep_signals();
-    if (nsig > 0) map_signals();
+    if (nsig > 0)
+        map_signals();
     prep_annotators();
     prep_times();
     printf("{ \"fetch\":\n");
-    if ((fetchsignals() + fetchannotations()) == 0) printf("null");
+    if ((fetchsignals() + fetchannotations()) == 0)
+        printf("null");
     printf("}\n");
 }
 
@@ -809,51 +927,62 @@ void fetch(void)
        A:0*, A:1*, A:0*
    The format of the suffix has been chosen to make this unlikely.
  */
-void force_unique_signames(void) {
+void force_unique_signames(void)
+{
     int i, j;
 
     SALLOC(sname, sizeof(char *), nsig);
 
-    for (i = 0; i < nsig; i++) {
-	for (j = i+1; j < nsig; j++) {
-	    if (strcmp(s[i].desc, s[j].desc) == 0) {
-		sname[i] = sname[j] = "change";
-	    }
-	}
+    for (i = 0; i < nsig; i++)
+    {
+        for (j = i + 1; j < nsig; j++)
+        {
+            if (strcmp(s[i].desc, s[j].desc) == 0)
+            {
+                sname[i] = sname[j] = "change";
+            }
+        }
     }
 
-    for (i = j =  0; i < nsig; i++) {
-	if (sname[i] == NULL && j < 1000) {
-	    SSTRCPY(sname[i], s[i].desc);
-	}
-	else {
-	    SUALLOC(sname[i], sizeof(char), strlen(s[i].desc) + 6);
-	    sprintf(sname[i], "%s:%d*", s[i].desc, j++);
-	}
-    }	
+    for (i = j = 0; i < nsig; i++)
+    {
+        if (sname[i] == NULL && j < 1000)
+        {
+            SSTRCPY(sname[i], s[i].desc);
+        }
+        else
+        {
+            SUALLOC(sname[i], sizeof(char), strlen(s[i].desc) + 6);
+            sprintf(sname[i], "%s:%d*", s[i].desc, j++);
+        }
+    }
 }
 
 /* ufindsig() is based on findsig() from the WFDB library, but it uses the
    unique signal names assigned by force_unique_signames() rather than
    the default signal names.
 */
-int ufindsig(char *p) {
-  char *q = p;
-  int i;
+int ufindsig(char *p)
+{
+    char *q = p;
+    int i;
 
-  while ('0' <= *q && *q <= '9')
-      q++;
-  if (*q == 0) {	/* all digits, probably a signal number */
-      i = atoi(p);
-      if (i < nsig) return (i);
-  }
-  /* Otherwise, p is either an integer too large to be a signal number or a
-     string containing a non-digit character.  Assume it's a signal name. */
-  for (i = 0; i < nsig; i++)
-      if (strcmp(p, sname[i]) == 0) return (i);
+    while ('0' <= *q && *q <= '9')
+        q++;
+    if (*q == 0)
+    { /* all digits, probably a signal number */
+        i = atoi(p);
+        if (i < nsig)
+            return (i);
+    }
+    /* Otherwise, p is either an integer too large to be a signal number or a
+       string containing a non-digit character.  Assume it's a signal name. */
+    for (i = 0; i < nsig; i++)
+        if (strcmp(p, sname[i]) == 0)
+            return (i);
 
-  /* No match found. */
-  return (-1);    
+    /* No match found. */
+    return (-1);
 }
 
 void cleanup(void)
@@ -863,15 +992,17 @@ void cleanup(void)
 
     SFREE(recpath);
     while (--nann >= 0)
-	SFREE(annotator[nann]);
+        SFREE(annotator[nann]);
 
-    if (nsig > 0) {
-	SFREE(s);
-	SFREE(sigmap);
+    if (nsig > 0)
+    {
+        SFREE(s);
+        SFREE(sigmap);
     }
-    if (sname) {
-	while (--nsig >= 0)
-	    SFREE(sname[nsig]);
-	SFREE(sname);
+    if (sname)
+    {
+        while (--nsig >= 0)
+            SFREE(sname[nsig]);
+        SFREE(sname);
     }
 }

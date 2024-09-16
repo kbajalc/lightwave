@@ -1,5 +1,5 @@
 /* file: patchann.c		G. Moody	27 March 2013
-				Last revised:	 13 May 2013
+                Last revised:	 13 May 2013
 Create or patch a PhysioBank-compatible annotation file from a LightWAVE editlog
 
 Copyright (C) 2012-2013 George B. Moody
@@ -72,37 +72,40 @@ file or the edit log) are in canonical order, so it is not necessary to use
 sortann to reorder either its input or its output.
 */
 
-struct ax {		/* in-memory annotation array structure */
-    long long t0;	/* array is ordered by t0 (48 bits needed) */
-    int anntyp;		/* annotation type, as in WFDB_Annotation */
-    char subtyp;	/* annotation subtype, as in WFDB_Annotation */
-    char *aux;		/* annotation aux string, as in WFDB_Annotation */
-    struct ax *next, *prev;  /* successor and predecessor pointers */
+struct ax
+{                           /* in-memory annotation array structure */
+    long long t0;           /* array is ordered by t0 (48 bits needed) */
+    int anntyp;             /* annotation type, as in WFDB_Annotation */
+    char subtyp;            /* annotation subtype, as in WFDB_Annotation */
+    char *aux;              /* annotation aux string, as in WFDB_Annotation */
+    struct ax *next, *prev; /* successor and predecessor pointers */
 };
 
-struct ax *aphead; 	/* head of annotation array (aphead->next points to the
-			   first annotation; aphead does not contain an
-			   annotation) */
-struct ax *aptail;	/* tail of annotation array (contains an annotation
-			   unless aptail = aphead, i.e., unless the array is
-			   empty) */
+struct ax *aphead; /* head of annotation array (aphead->next points to the
+              first annotation; aphead does not contain an
+              annotation) */
+struct ax *aptail; /* tail of annotation array (contains an annotation
+              unless aptail = aphead, i.e., unless the array is
+              empty) */
 
 char *record, *annotator, logtext[500];
 double sps;
-WFDB_Annotation annot;	/* current annotation to be processed */
+WFDB_Annotation annot; /* current annotation to be processed */
 
 int delete_ann(), insert_ann(), get_log_entry(), parse_log_header();
 
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     char *abuf, buf[256], *fname, *oaname = NULL, *p, *pname = argv[0];
     FILE *afile;
     int match = 0, n;
     struct ax *ap, *apthis;
     WFDB_Anninfo ai;
 
-    if (parse_log_header() == 0) {
-	fprintf(stderr, "%s: can't parse input file (format error)\n", pname);
-	exit(1);
+    if (parse_log_header() == 0)
+    {
+        fprintf(stderr, "%s: can't parse input file (format error)\n", pname);
+        exit(1);
     }
 
     SUALLOC(aphead, sizeof(struct ax), 1);
@@ -111,70 +114,83 @@ int main(int argc, char **argv) {
     ai.name = annotator;
     ai.stat = WFDB_READ;
     SUALLOC(oaname, strlen(annotator) + 2, 1);
-    if (strncmp(annotator, "new", 3) && annotator[strlen(annotator)-1] != '_')
-	sprintf(oaname, "%s_", annotator);
+    if (strncmp(annotator, "new", 3) && annotator[strlen(annotator) - 1] != '_')
+        sprintf(oaname, "%s_", annotator);
     else
-	sprintf(oaname, "%s", annotator);
-    if (annopen(record, &ai, 1) == 0){ /* input annotator opened successfully */
-	while (getann(0, &annot) == 0)  /* read the original annotations */
-	    (void)insert_ann();    /* copy them into the in-memory array */
-	ai.name = oaname;	/* use oaname only if input annotator exists */
+        sprintf(oaname, "%s", annotator);
+    if (annopen(record, &ai, 1) == 0)
+    {                                  /* input annotator opened successfully */
+        while (getann(0, &annot) == 0) /* read the original annotations */
+            (void)insert_ann();        /* copy them into the in-memory array */
+        ai.name = oaname;              /* use oaname only if input annotator exists */
     }
     /* Failure to open the original annotation file is not an error (it simply
        means that the edit log will be used to create an entirely new set of
        annotations).  Failure to open the output is fatal, however. */
     ai.stat = WFDB_WRITE;
-    if (annopen(record, &ai, 1) != 0) {  /* can't open output annotator */
-	fprintf(stderr, "%s: can't write output annotation file '%s.%s\n",
-		record, ai.name);
-	SFREE(oaname);
-	SFREE(record);
-	SFREE(annotator);
-	wfdbquit();
-	exit(2);
+    if (annopen(record, &ai, 1) != 0)
+    { /* can't open output annotator */
+        fprintf(stderr, "%s: can't write output annotation file '%s.%s\n",
+                record, ai.name);
+        SFREE(oaname);
+        SFREE(record);
+        SFREE(annotator);
+        wfdbquit();
+        exit(2);
     }
 
     /* read the edit log and merge it with the in-memory array */
-    while (n = get_log_entry()) {
-	switch (n) {
-	  case 1: insert_ann(); break;
-	  case 2: delete_ann(); break;
-	  default: break;	/* warn about bad input, continue processing */
-	}
+    while (n = get_log_entry())
+    {
+        switch (n)
+        {
+        case 1:
+            insert_ann();
+            break;
+        case 2:
+            delete_ann();
+            break;
+        default:
+            break; /* warn about bad input, continue processing */
+        }
     }
 
     /* Write the in-memory array to the output annotation file */
     ap = aphead->next;
-    while (ap) {
-	SFREE(ap->prev);
-	annot.anntyp = ap->anntyp;
-	annot.subtyp = ap->subtyp;
-	annot.chan = ((ap->t0) >> 8) & 255;
-	annot.num = ((ap->t0) & 255) - 128;
-	annot.time = (ap->t0) >> 16;
-	annot.aux = ap->aux;
-	putann(0, &annot);
-	ap = ap->next;
-	SFREE(annot.aux);
+    while (ap)
+    {
+        SFREE(ap->prev);
+        annot.anntyp = ap->anntyp;
+        annot.subtyp = ap->subtyp;
+        annot.chan = ((ap->t0) >> 8) & 255;
+        annot.num = ((ap->t0) & 255) - 128;
+        annot.time = (ap->t0) >> 16;
+        annot.aux = ap->aux;
+        putann(0, &annot);
+        ap = ap->next;
+        SFREE(annot.aux);
     }
     SFREE(aptail);
 
     /* Create or update ANNOTATORS. */
     for (p = record + strlen(record) - 1; p > record && *p != '/'; p--)
-	;
-    *p = '\0';  /* what's left of record is the directory name */
+        ;
+    *p = '\0'; /* what's left of record is the directory name */
     SUALLOC(fname, strlen(record) + 12, 1);
-    sprintf(fname, "%s/ANNOTATORS", record);  /* pathname of ANNOTATORS */
+    sprintf(fname, "%s/ANNOTATORS", record); /* pathname of ANNOTATORS */
     SUALLOC(abuf, strlen(ai.name) + 30, 1);
     sprintf(abuf, "%s\tcreated using LightWAVE\n", ai.name);
-    if (afile = fopen(fname, "r")) {
-	while (!match && fgets(buf, sizeof(buf), afile))
-	    if (strncmp(abuf, buf, strlen(ai.name) + 1) == 0) match = 1;
-	fclose(afile);
+    if (afile = fopen(fname, "r"))
+    {
+        while (!match && fgets(buf, sizeof(buf), afile))
+            if (strncmp(abuf, buf, strlen(ai.name) + 1) == 0)
+                match = 1;
+        fclose(afile);
     }
-    if (!match && (afile = fopen(fname, "a"))) {
-	fprintf(afile, "%s", abuf);
-	fclose(afile);
+    if (!match && (afile = fopen(fname, "a")))
+    {
+        fprintf(afile, "%s", abuf);
+        fclose(afile);
     }
     SFREE(abuf);
     SFREE(fname);
@@ -189,58 +205,69 @@ int main(int argc, char **argv) {
 
 /* Get the record and annotator names, and the sampling frequency, from
    the header.  Return 1 if successful, 0 otherwise. */
-int parse_log_header() {
+int parse_log_header()
+{
     char *p, *q;
 
     /* Read and parse header line 1. */
     fgets(logtext, sizeof(logtext), stdin);
 
-    if (strncmp(logtext, "[LWEditLog-1.0] Record ", 23)) return 0;
+    if (strncmp(logtext, "[LWEditLog-1.0] Record ", 23))
+        return 0;
 
-    for (p = q = logtext+23; *q && *q != ','; q++)
-	;
-    if (*q) *q = '\0';
+    for (p = q = logtext + 23; *q && *q != ','; q++)
+        ;
+    if (*q)
+        *q = '\0';
 
-    if (strncmp(q+1, " annotator ", 11)) return 0;
+    if (strncmp(q + 1, " annotator ", 11))
+        return 0;
     SSTRCPY(record, p);
 
-    for (p = q = q+12; *q && *q != ' '; q++)
-	;
-    if (*q) *q = '\0';
-    if (*(q+1) != '(') {
-	SFREE(record);
-	return 0;
+    for (p = q = q + 12; *q && *q != ' '; q++)
+        ;
+    if (*q)
+        *q = '\0';
+    if (*(q + 1) != '(')
+    {
+        SFREE(record);
+        return 0;
     }
     SSTRCPY(annotator, p);
 
-    for (p = q = q+2; *q && *q != ' '; q++)
-	;
-    if (*q) *q = '\0';
-    if (strncmp(q+1, "samples/second)", 15)) {
-	SFREE(record);
-	SFREE(annotator);
-	return 0;
+    for (p = q = q + 2; *q && *q != ' '; q++)
+        ;
+    if (*q)
+        *q = '\0';
+    if (strncmp(q + 1, "samples/second)", 15))
+    {
+        SFREE(record);
+        SFREE(annotator);
+        return 0;
     }
     sscanf(p, "%lf", &sps);
 
     /* Read header line 2, which should be empty. */
     fgets(logtext, sizeof(logtext), stdin);
-    if (*logtext != '\r' && *logtext != '\n') {
-	SFREE(record);
-	SFREE(annotator);
-	return 0;
+    if (*logtext != '\r' && *logtext != '\n')
+    {
+        SFREE(record);
+        SFREE(annotator);
+        return 0;
     }
 
-    return 1;	/* success! */
+    return 1; /* success! */
 }
 
-int get_log_entry() {
+int get_log_entry()
+{
     char p[500], *q;
     int edittype, i, j, len;
     WFDB_Time ti, tf;
 
     /* Read the next log entry, return 0 if no more entries. */
-    if (!fgets(logtext, sizeof(logtext), stdin)) return 0;
+    if (!fgets(logtext, sizeof(logtext), stdin))
+        return 0;
 
     /* Fill in the default fields of annot. */
     annot.anntyp = NORMAL;
@@ -251,112 +278,149 @@ int get_log_entry() {
        not be modified below). */
     len = strlen(logtext);
     strncpy(p, logtext, len + 1);
-    if (p[len - 1] == '\n') {
-	if (p[len - 2] == '\r') p[len - 2] = '\0';
-	else p[len - 1] = '\0';
+    if (p[len - 1] == '\n')
+    {
+        if (p[len - 2] == '\r')
+            p[len - 2] = '\0';
+        else
+            p[len - 1] = '\0';
     }
 
     /* Identify the action associated with this log entry. */
-    if (logtext[0] == '-') { edittype = 2; i = 1; } /* deletion */
-    else	       { edittype = 1; i = 0; } /* insertion */
+    if (logtext[0] == '-')
+    {
+        edittype = 2;
+        i = 1;
+    } /* deletion */
+    else
+    {
+        edittype = 1;
+        i = 0;
+    } /* insertion */
 
     /* Parse the rest of the entry to fill in the time and any non-default
        fields of annot. */
 
     /* find and isolate digits */
-    q = p+i;
-    for ( ; p[i]; i++)
-	if (p[i] < '0' || p[i] > '9') break;
+    q = p + i;
+    for (; p[i]; i++)
+        if (p[i] < '0' || p[i] > '9')
+            break;
     p[i] = '\0';
-    if (strlen(q) == 0 || sscanf(q, "%ld", &ti) != 1 || ti < 0) return -1;
+    if (strlen(q) == 0 || sscanf(q, "%ld", &ti) != 1 || ti < 0)
+        return -1;
     annot.time = ti;
-    
+
     /* is there anything else on this line? */
     if (logtext[i] == '\r' || logtext[i] == '\n')
-	return edittype;	/* nothing more to parse */
+        return edittype; /* nothing more to parse */
 
-    else if (logtext[i] != ',' && logtext[i] != '-') return -1;
-	/* something else is there but it can't be parsed */
+    else if (logtext[i] != ',' && logtext[i] != '-')
+        return -1;
+    /* something else is there but it can't be parsed */
 
-    else if (logtext[i] == '-') {
-	/* it looks like tf is there */
-	q = p + i+1;
-	for (++i; p[i]; i++)
-	    if (p[i] < '0' || p[i] > '9') break;
-	p[i] = '\0';
-	if (strlen(q) == 0 || sscanf(q, "%ld", &tf) != 1 || tf < ti)
-	    return -1;
+    else if (logtext[i] == '-')
+    {
+        /* it looks like tf is there */
+        q = p + i + 1;
+        for (++i; p[i]; i++)
+            if (p[i] < '0' || p[i] > '9')
+                break;
+        p[i] = '\0';
+        if (strlen(q) == 0 || sscanf(q, "%ld", &tf) != 1 || tf < ti)
+            return -1;
 
-	/* no support for tf in the WFDB library yet; warn, but continue
-	   parsing the rest of this log entry */
-	fprintf(stderr, "(warning): no support for tf at %ld", annot.time);
+        /* no support for tf in the WFDB library yet; warn, but continue
+           parsing the rest of this log entry */
+        fprintf(stderr, "(warning): no support for tf at %ld", annot.time);
 
-	if (logtext[i] == '\r' || logtext[i] == '\n')
-	    return edittype;	/* nothing more to parse */
+        if (logtext[i] == '\r' || logtext[i] == '\n')
+            return edittype; /* nothing more to parse */
     }
-    
+
     /* next should be anntype */
-    q = p + i+1;
+    q = p + i + 1;
     /* look for end of anntype, but skip the first character since it
        might be '{' or ',' if a non-standard type was defined */
     for (i += 2; p[i] && p[i] != ',' && p[i] != '{'; i++)
-	;
+        ;
     p[i] = '\0';
     annot.anntyp = strann(q);
-    if (annot.anntyp == NOTQRS) {
-	/* unrecognized type string: set anntyp to NOTE, copy string to aux */
-	annot.anntyp = NOTE;
-	*(q-1) = strlen(q);	/* aux strings have byte count prefix */
-	SSTRCPY(annot.aux, q-1);
+    if (annot.anntyp == NOTQRS)
+    {
+        /* unrecognized type string: set anntyp to NOTE, copy string to aux */
+        annot.anntyp = NOTE;
+        *(q - 1) = strlen(q); /* aux strings have byte count prefix */
+        SSTRCPY(annot.aux, q - 1);
     }
-    
+
     /* is (subtype/chan/num) present? */
-    if (logtext[i] == '{') {
-	for (j = ++i; p[j] && p[j] != '/'; j++)
-	    ;
-	if (p[j] != '/') return -1;
-	if (j > i) { p[j] = '\0'; annot.subtyp = atoi(p+i); }
-	i = j+1;
-	
-	for (j = i; p[j] && p[j] != '/'; j++)
-	    ;
-	if (p[j] != '/') return -1;
-	if (j > i) { p[j] = '\0'; annot.chan = atoi(p+i); }
-	i = j+1;
-	
-	for (j = i; p[j] && p[j] != '}'; j++)
-	    ;
-	if (p[j] != '}') return -1;
-	if (j > i) { p[j] = '\0'; annot.num = atoi(p+i); }
-	i = j+1;
+    if (logtext[i] == '{')
+    {
+        for (j = ++i; p[j] && p[j] != '/'; j++)
+            ;
+        if (p[j] != '/')
+            return -1;
+        if (j > i)
+        {
+            p[j] = '\0';
+            annot.subtyp = atoi(p + i);
+        }
+        i = j + 1;
+
+        for (j = i; p[j] && p[j] != '/'; j++)
+            ;
+        if (p[j] != '/')
+            return -1;
+        if (j > i)
+        {
+            p[j] = '\0';
+            annot.chan = atoi(p + i);
+        }
+        i = j + 1;
+
+        for (j = i; p[j] && p[j] != '}'; j++)
+            ;
+        if (p[j] != '}')
+            return -1;
+        if (j > i)
+        {
+            p[j] = '\0';
+            annot.num = atoi(p + i);
+        }
+        i = j + 1;
     }
-    
+
     /* is aux present? */
-    if (logtext[i] == ',') {
-	int len = strlen(p+i+1), maxlen = 255;
+    if (logtext[i] == ',')
+    {
+        int len = strlen(p + i + 1), maxlen = 255;
 
-	if (annot.aux) {  /* true if type was unrecognized, see above */
-	    unsigned char *s = annot.aux + strlen(annot.aux) - 1;
-	    p[i--] = ':';   /* prefix user-specified aux with type and colon */
-	    while (s > annot.aux)
-		p[i--] = *s--; /* safe (annot.aux is a substring of p[0..i]) */
-	}
-	len = strlen(p+i+1);
-	if (len > 255) {  /* check length and truncated if necessary */
-	    fprintf(stderr, "(warning): aux will be truncated at %ld",
-		    annot.time);
-	    len = 255;
-	    p[i+len+1] == '\0';
-	}
-	p[i] = len;	/* aux strings have byte count prefix */
-	SSTRCPY(annot.aux, p+i);
+        if (annot.aux)
+        { /* true if type was unrecognized, see above */
+            unsigned char *s = annot.aux + strlen(annot.aux) - 1;
+            p[i--] = ':'; /* prefix user-specified aux with type and colon */
+            while (s > annot.aux)
+                p[i--] = *s--; /* safe (annot.aux is a substring of p[0..i]) */
+        }
+        len = strlen(p + i + 1);
+        if (len > 255)
+        { /* check length and truncated if necessary */
+            fprintf(stderr, "(warning): aux will be truncated at %ld",
+                    annot.time);
+            len = 255;
+            p[i + len + 1] == '\0';
+        }
+        p[i] = len; /* aux strings have byte count prefix */
+        SSTRCPY(annot.aux, p + i);
     }
 
-    return edittype;  /* 1 (insertion), or 2 (deletion) */
+    return edittype; /* 1 (insertion), or 2 (deletion) */
 }
 
 /* Insert annot into the in-memory annotation array in time/chan/num order. */
-int insert_ann() {
+int insert_ann()
+{
     struct ax *ap, *apthis;
 
     /* Allocate memory for the annotation to be inserted. */
@@ -366,43 +430,51 @@ int insert_ann() {
     apthis->anntyp = annot.anntyp;
     apthis->subtyp = annot.subtyp;
     apthis->t0 = (annot.time << 16) |
-	((annot.chan & 255) << 8) | ((annot.num + 128) & 255);
-    if (annot.aux && *(annot.aux)) SSTRCPY(apthis->aux, annot.aux);
+                 ((annot.chan & 255) << 8) | ((annot.num + 128) & 255);
+    if (annot.aux && *(annot.aux))
+        SSTRCPY(apthis->aux, annot.aux);
 
     /* Find the correct position for *apthis and insert it there. */
-    for (ap = aptail; ap; ap = ap->prev) {
-	if (ap->t0 < apthis->t0) { /* insert apthis between ap and ap->next */
-	    apthis->prev = ap;		/* link apthis to its predecessor ... */
-	    apthis->next = ap->next;   /* and to its successor (may be null) */
-	    apthis->prev->next = apthis;  /* link its predecessor to apthis */
-	    if (apthis->next)	       /* if apthis has a successor ... */
-		apthis->next->prev = apthis;  /* link it back to apthis */
-	    else aptail = apthis;      /* otherwise apthis is now the tail */
-	    break;
-	}
+    for (ap = aptail; ap; ap = ap->prev)
+    {
+        if (ap->t0 < apthis->t0)
+        {                                    /* insert apthis between ap and ap->next */
+            apthis->prev = ap;               /* link apthis to its predecessor ... */
+            apthis->next = ap->next;         /* and to its successor (may be null) */
+            apthis->prev->next = apthis;     /* link its predecessor to apthis */
+            if (apthis->next)                /* if apthis has a successor ... */
+                apthis->next->prev = apthis; /* link it back to apthis */
+            else
+                aptail = apthis; /* otherwise apthis is now the tail */
+            break;
+        }
     }
     return 1;
 }
 
 /* delete an exact match of annot, if it exists, from the in-memory array */
-int delete_ann() {
+int delete_ann()
+{
     long long t0;
     struct ax *ap;
 
-    t0 = (annot.time << 16) | ((annot.chan&255) << 8) | ((annot.num+128) & 255);
-    for (ap = aptail; ap; ap = ap->prev) {
-	if (t0 == ap->t0 &&
-	    annot.anntyp == ap->anntyp && annot.subtyp == ap->subtyp &&
-	    (!annot.aux && !ap->aux) ||
-	     (annot.aux && ap->aux && !strcmp(annot.aux, ap->aux))) {
-	    ap->prev->next = ap->next;     /* link predecessor to successor */
-	    if (ap->next)		   /* if ap has a successor ... */
-		ap->next->prev = ap->prev; /* link successor to predecessor */
-	    else aptail = ap->prev; /* otherwise predecessor is now the tail */ 
-	    SFREE(ap->aux);
-	    SFREE(ap);
-	    return 1;
-	}
+    t0 = (annot.time << 16) | ((annot.chan & 255) << 8) | ((annot.num + 128) & 255);
+    for (ap = aptail; ap; ap = ap->prev)
+    {
+        if (t0 == ap->t0 &&
+                annot.anntyp == ap->anntyp && annot.subtyp == ap->subtyp &&
+                (!annot.aux && !ap->aux) ||
+            (annot.aux && ap->aux && !strcmp(annot.aux, ap->aux)))
+        {
+            ap->prev->next = ap->next;     /* link predecessor to successor */
+            if (ap->next)                  /* if ap has a successor ... */
+                ap->next->prev = ap->prev; /* link successor to predecessor */
+            else
+                aptail = ap->prev; /* otherwise predecessor is now the tail */
+            SFREE(ap->aux);
+            SFREE(ap);
+            return 1;
+        }
     }
     return 0;
 }
