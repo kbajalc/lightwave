@@ -40,8 +40,8 @@ def lightwave_server(port):
     server = cls(address, handler)
     port = server.server_address[1]
 
-    url = 'http://localhost:{}/{}/{}'.format(port, client_dir, home_page)
-    print('LightWAVE server running at:\n  {}'.format(url))
+    url = 'http://lw:{}/{}'.format(port, client_dir)
+    print('LightWAVE server running at:\n {}'.format(url))
 
     os.chdir('physionet')
     server.serve_forever()

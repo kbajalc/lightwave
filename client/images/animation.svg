@@ -12,7 +12,7 @@
     <mask id="Test1mask" maskUnits="userSpaceOnUse"  x="0" y="-1500" width="10000" height="3000" >
       <rect x="0" y="-1500" width="10000" height="3000" fill="#eee"  />
       <animate attributeName="width" attributeType="XML" begin="0s" dur="8s" from="0" to="10000" fill="freeze" />
-      <animate attributeName="fill-opacity" begin="5s" dur="3s" from=".9" to=".1" fill="freeze" />
+      <animate attributeName="fill-opacity" begin="5s" dur="3s" from=".9" to=".2" fill="freeze" />
     </mask>
 
 <rect id="Test1rectangle" width="60" height="120" fill="#F00" transform="translate(-30,-60)"  >

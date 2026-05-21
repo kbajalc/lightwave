@@ -119,13 +119,13 @@ var server,
 // View/edit panel geometry
     width,	// width of View/edit panel, in pixels
     height,	// height of View/edit panel, in pixels
-    swl,        // width of left column, in pixels
+    swl,    // width of left column, in pixels
     sww,	// signal window width, in pixels
     swr,	// width of right column, in pixels
     svgw,	// grid width, in SVG coords
     svgh,	// grid height, in SVG coords
     svgl,	// left column width, in SVG coords
-    svgr,       // right column width, in SVG coords
+    svgr,   // right column width, in SVG coords
     svgtw,	// total available width in SVG coords
     svgf,	// font-size for signal/annotation labels
     svgtf,	// small font-size for timestamps
@@ -1087,20 +1087,38 @@ function show_plot() {
 	x0s = (tscl-Math.floor((t0_ticks % tickfreq)*tscl/tickfreq))%tscl;
 	x0r = x0s%griddx;
 	x0q = Math.floor(x0s/griddx)*griddx;
+
 	grd += '<title>(click to hide grid)</title></g>'
-	    + '<path stroke="rgb(200,100,100)" fill="red" stroke-width="' + lwl
+	    + '<path stroke="rgb(241 183 179)" fill="red" stroke-width="' + lwl
 	    + '" d="M' + x0r + ',0 ';
+
 	uparrow = ' l-' + adx1 + ',' + ady1 + 'l' + adx2 + ',0 l-' + adx1
 	    + ',-' + ady1 +  'm' + griddx + ',-';
+        
 	for (x = 0; x + x0r <= svgw + 0.01 * griddx; x += griddx) {
-	    if (x%tscl === x0q) { grd += 'l0,' + svgh + uparrow + svgh; }
+	    if (x%tscl === x0q) { 
+            grd += 'l0,' + svgh + uparrow + svgh;
+        }
 	    else { grd += 'l0,' + svgh + ' m' + griddx + ',-' + svgh; }
 	}
 	grd += 'M0,0 ';
-	for (y = 0; y <= svgh; y += 200) {
-	    grd += 'l' + svgw + ',0 m-' + svgw +',200 ';
+	for (y = 0; y <= svgh; y += griddx) {
+	    grd += 'l' + svgw + ',0 m-' + svgw +','+griddx+' ';
 	}
 	grd += '" />\n';
+
+    grd += '<path stroke="rgb(241 183 179)" fill="red" stroke-width="' + lwl*2
+	    + '" d="M' + x0r + ',0 ';
+     
+        var gdx5 = griddx*5
+        for (x = 0; x + x0r <= svgw + 0.01 * griddx; x += gdx5) {
+            grd += 'l0,' + svgh + ' m' + gdx5 + ',-' + svgh;
+        }
+        grd += 'M0,0 ';
+        for (y = 0; y <= svgh; y += gdx5) {
+            grd += 'l' + svgw + ',0 m-' + svgw +','+gdx5+' ';
+        }
+    grd += '" />\n';
     }
 
     // timestamps
@@ -1622,7 +1640,7 @@ function load_palette(summary) {
 function set_sw_width(seconds) {
     dt_sec = seconds;
     if (dt_sec < 10) { tickint = tickfreq; griddt = tickfreq / 5; }
-    else if (dt_sec < 21) { tickint = 5 * tickfreq; griddt = tickfreq / 5; }
+    else if (dt_sec < 21) { tickint = 5 * tickfreq; griddt = tickfreq / 25; }
     else if (dt_sec < 35) { tickint = 5 * tickfreq; griddt = tickfreq; }
     else if (dt_sec < 181) { tickint = 10 * tickfreq; griddt = 2 * tickfreq; }
     else if (dt_sec < 601) { tickint = 60 * tickfreq; griddt = 10 * tickfreq; }
@@ -1632,13 +1650,13 @@ function set_sw_width(seconds) {
 
     svgw = tscl*dt_sec;
     svgh = Math.round(svgw/2);
-    svgl = Math.round(svgw/8);
-    svgr = Math.round(svgw/24);
+    svgl = Math.round(svgw/20);
+    svgr = Math.round(svgw/20);
     svgtw= svgl + svgw + svgr;
     svgf = Math.round(svgw * 0.012);
     svgtf= Math.round(svgw * 0.01);
     svgc = Math.round(svgw * 0.008);
-    lwl = Math.ceil(svgw * 0.0005);
+    lwl = Math.ceil(svgw * 0.0003);
     lwn = lwl * 2;
     lwb = lwl * 3;
     adx1 = Math.round(svgw * 0.002);
@@ -1680,7 +1698,7 @@ function resize_lightwave() {
     var vp = document.getElementById("viewport");
     m = (vp ? vp.getScreenCTM() : null);
     set_sw_width(dt_sec);
-    $('#helpframe').attr('height', $(window).height() - 180 + 'px');
+    $('#helpframe').attr('height', $(window).height() - 220 + 'px');
     show_plot(); // redraw signal window if resized
 }
 
@@ -2994,7 +3012,9 @@ function parse_url() {
 	v = q[n].split("=");
 	if (v[0] === 'db') { db = v[1]; }
 	else if (v[0] === 'record') { record = v[1]; }
-	else if (v[0] === 't0') {  t0_string = v[1]; }
+    else if (v[0] === 'r') { record = v[1]; }
+	else if (v[0] === 't0') { t0_string = v[1]; }
+    else if (v[0] === 't') { t0_string = v[1]; }
     }
 
     // Convert relative URLs to absolute

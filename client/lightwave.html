@@ -64,8 +64,8 @@ provides some of the functions of LightWAVE without Javascript.
       <td><span id="rlist">&nbsp;</span><span id="rslist">&nbsp;</span></td>
   </tr>
 
-  <tr><td colspan=2 align="center" id="prompt">
-     First visit? Click on the <b>Help</b> tab above.</td></tr>
+  <!-- <tr><td colspan=2 align="center" id="prompt">
+     First visit? Click on the <b>Help</b> tab above.</td></tr> -->
  </table>
 </div>
 
@@ -83,9 +83,15 @@ record to the start of the window, then click '&#x21b4;'"
 		    title="refresh signal window">&#x21b4;</button></div>
     </td>
 
-    <td width="50%"><div style="font-size: 14px; text-align: center">
-      <button class="sor" tabindex="8"
-		    title="start of record">|&#9665;</button>
+    <td width="50%">
+        <div  style="font-size: 14px; text-align: center">
+
+            <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            
+
+      <span id="buttons1">
+      <button class="sor" tabindex="8" 
+        title="start of record">|&#9665;</button>
       <button class="rev" tabindex="4"
 		    title="previous window">&#9665;</button>
       <button class="scrollrev" tabindex="4"
@@ -96,13 +102,20 @@ record to the start of the window, then click '&#x21b4;'"
 		    title="next window">&#9655;</button>
       <button class="eor" tabindex="7"
 		    title="end of record">&#9655;|</button>
-      <br>
+        </span>
+    
+    <span>&nbsp;&nbsp;&nbsp;</span>
+
+    <span id="buttons2">
       <button class="srev" tabindex="5"
 	   title="search for previous 'Find' target">&#9665; Search</button>
       <button class="find" tabindex="9"
 		    title="define search target">Find...</button>
       <button class="sfwd" tabindex="6"
 		   title="search for next 'Find' target">Search &#9655;</button>
+    </span>
+    <!-- <br>
+    <span>&nbsp;&nbsp;&nbsp;</span> -->
       </div>
     </td>
     </span>

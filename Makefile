@@ -124,6 +124,7 @@ CFLAGS = -O -DLWDIR=\"$(LWCLIENTDIR)\" -DLWVER=\"$(LWVERSION)\" \
 
 # LDFLAGS is a set of options for the linker.
 LDFLAGS = -lwfdb
+# LDFLAGS = -lwfdb -Wl,-rpath,/usr/local/lib
 
 all: server scribe client
 

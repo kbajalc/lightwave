@@ -23,19 +23,35 @@ div.notice { width: 90%; margin: auto; padding: 2em; background: #cdf; }
 }
 #tabs .ui-tabs-nav {
 	padding-left: 0px;
-	background: url('../images/animation.svg'),
-	  url('../images/lightwave.svg');
+	background: url('../images/animation.svg');
+	  /* url('../images/lightwave.svg'); */
 	background-position: top right;
 	background-repeat: no-repeat;
-	border-width: 0px 0px 1px 0px;
+	border-width: 0px 0px 0px 0px;
 	-moz-border-radius: 0px;
 	-webkit-border-radius: 0px;
 	border-radius: 0px;
 }
 #tabs .ui-tabs-panel {
 	background: #fff;
-	border-width: 0px 1px 1px 1px;
+	border-width: 0px 0px 0px 0px;
 }
+#tabs .ui-tabs-tab {
+    border-bottom-width: 1px;
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+
+#buttons1 button {
+    height: 2.2em;
+    width: 2.2em; 
+}
+
+#buttons2 button {
+    height: 2.2em;
+    /* width: 6em; */
+}
+
 .ui-slider { width: 10em; height: .2em; margin-top: .3em; }
 .ui-slider-handle { width: .7em !important; height: .55em !important;
 		  margin-top: .1em; }

@@ -139,7 +139,7 @@ int main(int argc, char **argv)
     else if (strcmp(action, "alist") == 0)
         alist();
 
-    else if ((record = get_param("record")) == NULL)
+    else if ((record = get_param("record")) == NULL && (record = get_param("r")) == NULL)
         lwfail("Your request did not specify a record");
 
     else if (strcmp(action, "info") == 0)
@@ -246,7 +246,7 @@ void prep_times()
 {
     char *p;
 
-    if ((p = get_param("t0")) == NULL)
+    if ((p = get_param("t0")) == NULL && (p = get_param("t")) == NULL)
         p = "0";
     if ((t0 = strtim(p)) < 0L)
         t0 = -t0;
