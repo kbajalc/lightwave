@@ -201,7 +201,12 @@ sandboxed-lightwave:	server/lightwave.c server/cgi.c server/sandbox.c server/*.h
 
 # Compile and install patchann.
 patchann:	server/patchann.c
-	$(CC) $(CFLAGS) server/patchann.c -o $(WFDBROOT)/bin/patchann $(LDFLAGS)
+	$(CC) $(CFLAGS) server/patchann.c -o patchann $(LDFLAGS)
+
+# Install patchann under WFDBROOT (may require elevated privileges).
+install-patchann: patchann
+	mkdir -p $(WFDBROOT)/bin
+	install -m 755 patchann $(WFDBROOT)/bin/patchann
 
 # Make a tarball of sources.
 tarball: 	 clean
