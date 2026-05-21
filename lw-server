@@ -31,13 +31,38 @@ def lightwave_server(port):
     
     os.environ['QUERY_STRING'] = ''
 
+    # Subclass handler to silence browser noise:
+    #  - 404 for apple-touch-icon (browser auto-request)
+    #  - ConnectionResetError / BrokenPipeError from HTTPS-upgrade probes
+    class QuietHandler(http.server.CGIHTTPRequestHandler):
+        _SILENT_PATHS = {'/apple-touch-icon.png',
+                         '/apple-touch-icon-precomposed.png',
+                         '/favicon.ico'}
+
+        def send_error(self, code, message=None, explain=None):
+            if code == 404 and self.path in self._SILENT_PATHS:
+                self.send_response(204)
+                self.end_headers()
+                return
+            super().send_error(code, message, explain)
+
+        def log_error(self, fmt, *args):
+            # suppress 400s from TLS-handshake probes
+            if args and str(args[1]) == '400':
+                return
+            super().log_error(fmt, *args)
+
+    class QuietServer(http.server.ThreadingHTTPServer
+                      if hasattr(http.server, 'ThreadingHTTPServer')
+                      else http.server.HTTPServer):
+        def handle_error(self, request, client_address):
+            import sys
+            if sys.exc_info()[0] in (ConnectionResetError, BrokenPipeError):
+                return
+            super().handle_error(request, client_address)
+
     address = ('127.0.0.1', port)
-    handler = http.server.CGIHTTPRequestHandler
-    try:
-        cls = http.server.ThreadingHTTPServer
-    except AttributeError:
-        cls = http.server.HTTPServer
-    server = cls(address, handler)
+    server = QuietServer(address, QuietHandler)
     port = server.server_address[1]
 
     url = 'http://lw:{}/{}'.format(port, client_dir)

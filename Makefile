@@ -136,6 +136,14 @@ run: server scribe client
 exe:
 	python lw-server
 
+# Take a screenshot of the running LightWAVE instance.
+# Usage: make screenshot
+#        make screenshot QUERY="db=mitdb&record=200&x=0:05:30" OUT=/tmp/lw.png
+QUERY ?= db=mitdb&record=200&x=0:05:30
+OUT   ?= /tmp/lw-marker.png
+screenshot:
+	node lw-screenshot.mjs "$(QUERY)" "$(OUT)"
+
 # Install both the lightwave server and client on this machine.
 install:	server scribe client
 	@echo
