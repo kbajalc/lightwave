@@ -1,3 +1,8 @@
 #!/bin/sh
+if [ "$1" = "net" ]; then
+    source setwfdb
+else
+    source locwfdb
+fi
 cd /Users/kbajalc/Projects/exg-lightwave
 python lw-server
