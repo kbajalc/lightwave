@@ -69,6 +69,10 @@ be integers.  The default value of 0.001 means that the maximum error is
 one part in a thousand (0.1%). */
 #define TOL 0.001
 
+#ifndef LWVER
+#define LWVER "0.0.0"
+#endif
+
 static char *action, *annotator[NAMAX], buf[BUFSIZE], *db, *record, *recpath,
     **sname, wfdb_filename[MFNLEN];
 static int interactive, nann, nsig, nosig, *sigmap;
@@ -205,7 +209,7 @@ void map_signals() {
   SUALLOC(sigmap, nsig, sizeof(int));
   for (n = 0; n < nsig; n++)
     sigmap[n] = -1;
-  while (p = get_param_multiple("signal")) {
+  while ((p = get_param_multiple("signal"))) {
     if ((n = ufindsig(p)) >= 0) {
       sigmap[n] = n;
       n++;
@@ -479,7 +483,7 @@ void dblist(void) {
 
 void rlist(void) {
   sprintf(buf, "%s/RECORDS", db);
-  if (ifile = wfdb_open(buf, NULL, WFDB_READ)) {
+  if ((ifile = wfdb_open(buf, NULL, WFDB_READ))) {
     char *p;
     int first = 1;
 
@@ -515,7 +519,7 @@ void alist(void) {
       }
     /* Look for an "ANNOTATORS" file in the next possible location. */
     sprintf(wfdb_filename, "%s/%s/ANNOTATORS", wfdb, db);
-    if (ifile = wfdb_fopen(wfdb_filename, "rb")) {
+    if ((ifile = wfdb_fopen(wfdb_filename, "rb"))) {
       if (first)
         printf("{ \"annotator\": [\n");
       while (wfdb_fgets(buf, sizeof(buf), ifile)) {
@@ -605,9 +609,9 @@ void info(void) {
   } else
     printf("    \"signal\": null,\n");
 
-  if (info = getinfo(recpath)) {
+  if ((info = getinfo(recpath))) {
     printf("    \"note\": [\n      %s", p = strjson(info));
-    while (info = getinfo((char *)NULL)) {
+    while ((info = getinfo((char *)NULL))) {
       printf(",\n      %s", p = strjson(info));
       SFREE(p);
     }
